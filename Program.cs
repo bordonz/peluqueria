@@ -1,7 +1,14 @@
+using peluqueria.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IRepositorioServicio, RepositorioServicio>();
+builder.Services.AddScoped<IRepositorioTurno, RepositorioTurno>();
+builder.Services.AddScoped<IRepositorioPago, RepositorioPago>();
+builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
+builder.Services.AddScoped<IRepositorioServicio, RepositorioServicio>();
 
 var app = builder.Build();
 
