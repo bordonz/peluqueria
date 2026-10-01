@@ -14,8 +14,8 @@ namespace peluqueria.Models
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"INSERT INTO Servicios
-                    (nombre, descripcion, duracion, precio, activo)
-                    VALUES (@nombre, @descripcion, @duracion, @precio, @activo);
+                    (nombre, descripcion, duracion, precio, id_peluquero, activo)
+                    VALUES (@nombre, @descripcion, @duracion, @precio, @idPeluquero, @activo);
                     SELECT LAST_INSERT_ID();";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -23,6 +23,7 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@descripcion", s.Descripcion);
                     command.Parameters.AddWithValue("@duracion", s.Duracion);
                     command.Parameters.AddWithValue("@precio", s.Precio);
+                    command.Parameters.AddWithValue("@idPeluquero", s.IdPeluquero);
                     command.Parameters.AddWithValue("@activo", s.Activo);
                     connection.Open();
                     res = Convert.ToInt32(command.ExecuteScalar());
@@ -58,7 +59,7 @@ namespace peluqueria.Models
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"UPDATE Servicios                 
-                    SET nombre=@nombre, descripcion=@descripcion, duracion=@duracion, precio=@precio, activo=@activo
+                    SET nombre=@nombre, descripcion=@descripcion, duracion=@duracion, precio=@precio, id_peluquero=@idPeluquero, activo=@activo
                     WHERE id_servicio = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -66,6 +67,7 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@descripcion", s.Descripcion);
                     command.Parameters.AddWithValue("@duracion", s.Duracion);
                     command.Parameters.AddWithValue("@precio", s.Precio);
+                    command.Parameters.AddWithValue("@idPeluquero", s.IdPeluquero);
                     command.Parameters.AddWithValue("@activo", s.Activo);
                     connection.Open();
                     res = command.ExecuteNonQuery();
@@ -79,8 +81,9 @@ namespace peluqueria.Models
             List<Servicio> res = new List<Servicio>();
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT s.*
+                string sql = @"SELECT s.*, p.nombre AS peluquero_nombre, p.apellido AS peluquero_apellido
                     FROM Servicios s
+                    INNER JOIN Usuarios p ON s.id_peluquero = p.id_usuario
                     ORDER BY s.id_servicio
                     LIMIT @tamPagina OFFSET @offset";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
@@ -99,6 +102,12 @@ namespace peluqueria.Models
                             Descripcion = reader.GetString("descripcion"),
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
+                            IdPeluquero = reader.GetInt32("id_peluquero"),
+                            Peluquero = new Usuario
+                            {
+                                Nombre = reader.GetString("peluquero_nombre"),
+                                Apellido = reader.GetString("peluquero_apellido")
+                            },
                             Activo = reader.GetBoolean("activo"),
                         };
                         res.Add(s);
@@ -133,8 +142,9 @@ namespace peluqueria.Models
             Servicio? s = null;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT s.*
+                string sql = @"SELECT s.*, p.nombre AS peluquero_nombre, p.apellido AS peluquero_apellido
                     FROM Servicios s
+                    INNER JOIN Usuarios p ON s.id_peluquero = p.id_usuario
                     WHERE s.id_servicio = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -151,6 +161,12 @@ namespace peluqueria.Models
                             Descripcion = reader.GetString("descripcion"),
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
+                            IdPeluquero = reader.GetInt32("id_peluquero"),
+                            Peluquero = new Usuario
+                            {
+                                Nombre = reader.GetString("peluquero_nombre"),
+                                Apellido = reader.GetString("peluquero_apellido")
+                            },
                             Activo = reader.GetBoolean("activo"),
                         };
                     }
