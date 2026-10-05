@@ -7,8 +7,8 @@ namespace peluqueria.Models
         public string Descripcion { get; set; } = "";
         public string Duracion { get; set; } = "";
         public decimal Precio { get; set; }
-        public int IdPeluquero { get; set; }
-        public Usuario? Peluquero { get; set; } 
+        public int IdEstilista { get; set; }
+        public Usuario? Estilista { get; set; } 
         public bool Activo { get; set; } = true;
     }
 }

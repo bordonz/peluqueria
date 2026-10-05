@@ -23,7 +23,7 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@descripcion", s.Descripcion);
                     command.Parameters.AddWithValue("@duracion", s.Duracion);
                     command.Parameters.AddWithValue("@precio", s.Precio);
-                    command.Parameters.AddWithValue("@idPeluquero", s.IdPeluquero);
+                    command.Parameters.AddWithValue("@idPeluquero", s.IdEstilista);
                     command.Parameters.AddWithValue("@activo", s.Activo);
                     connection.Open();
                     res = Convert.ToInt32(command.ExecuteScalar());
@@ -67,7 +67,7 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@descripcion", s.Descripcion);
                     command.Parameters.AddWithValue("@duracion", s.Duracion);
                     command.Parameters.AddWithValue("@precio", s.Precio);
-                    command.Parameters.AddWithValue("@idPeluquero", s.IdPeluquero);
+                    command.Parameters.AddWithValue("@idPeluquero", s.IdEstilista);
                     command.Parameters.AddWithValue("@activo", s.Activo);
                     connection.Open();
                     res = command.ExecuteNonQuery();
@@ -102,8 +102,8 @@ namespace peluqueria.Models
                             Descripcion = reader.GetString("descripcion"),
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
-                            IdPeluquero = reader.GetInt32("id_peluquero"),
-                            Peluquero = new Usuario
+                            IdEstilista = reader.GetInt32("id_peluquero"),
+                            Estilista = new Usuario
                             {
                                 Nombre = reader.GetString("peluquero_nombre"),
                                 Apellido = reader.GetString("peluquero_apellido")
@@ -161,8 +161,8 @@ namespace peluqueria.Models
                             Descripcion = reader.GetString("descripcion"),
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
-                            IdPeluquero = reader.GetInt32("id_peluquero"),
-                            Peluquero = new Usuario
+                            IdEstilista = reader.GetInt32("id_peluquero"),
+                            Estilista = new Usuario
                             {
                                 Nombre = reader.GetString("peluquero_nombre"),
                                 Apellido = reader.GetString("peluquero_apellido")
@@ -174,5 +174,34 @@ namespace peluqueria.Models
                 return s;
             }
         }
+
+        public List<Servicio> ObtenerTodos()
+		{
+			var lista = new List<Servicio>();
+
+			using (MySqlConnection connection = new MySqlConnection(connectionString))
+			{
+				string sql = @"SELECT s.id_servicio, s.nombre
+							FROM Servicios s
+							ORDER BY s.id_servicio ASC";
+
+				using (MySqlCommand command = new MySqlCommand(sql, connection))
+				{
+					connection.Open();
+					var reader = command.ExecuteReader();
+
+					while (reader.Read())
+					{
+						var tipo = new Servicio
+						{
+							IdServicio = reader.GetInt32("id_servicio"),
+							Nombre = reader.GetString("nombre")
+						};
+						lista.Add(tipo);
+					}
+				}
+			}
+			return lista;
+		}
     }
 }

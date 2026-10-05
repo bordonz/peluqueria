@@ -132,7 +132,7 @@ namespace peluqueria.Controllers
             {
                 //TODO: Validar que nos devuelva un servicio
                 repositorio.Baja(id);
-                TempData["Mensaje"] = "Cambio de estado del pago exitoso";
+                TempData["Mensaje"] = "Servicio dado de baja";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
