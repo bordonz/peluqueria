@@ -8,10 +8,10 @@ namespace peluqueria.Models
         {
             
         }
-        //TODO: Para el servicio implementar el buscador por nombre.
+        //TODO: Para el EstilistaServicio implementar el buscador por nombre.
         public int Alta(Turno t)
         {
-            t.IdCliente = 1;
+            t.IdCliente = 1; //TODO: Sacar el usuario del logueado.
             t.Estado = "Ocupado";
             t.FechaEmitido = DateTime.Now;
             int res = -1;
@@ -19,8 +19,8 @@ namespace peluqueria.Models
             {
                 //Definir fecha emitido como today
                 string sql = @"INSERT INTO Turnos
-                    (fecha_emitido, fecha_turno, estado, id_cliente, id_servicio)
-                    VALUES (@fecha_emitido, @fecha_turno, @estado, @id_cliente, @id_servicio);
+                    (fecha_emitido, fecha_turno, estado, id_cliente, id_estilista_servicio)
+                    VALUES (@fecha_emitido, @fecha_turno, @estado, @id_cliente, @id_estilista_servicio);
                     SELECT LAST_INSERT_ID();";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -28,7 +28,7 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@fecha_turno", t.FechaTurno);
                     command.Parameters.AddWithValue("@estado", t.Estado);
                     command.Parameters.AddWithValue("@id_cliente", t.IdCliente);
-                    command.Parameters.AddWithValue("@id_servicio",t.IdServicio);
+                    command.Parameters.AddWithValue("@id_estilista_servicio",t.IdEstilistaServicio);
                     connection.Open();
                     res = Convert.ToInt32(command.ExecuteScalar());
                     t.IdTurno = res;
@@ -58,21 +58,20 @@ namespace peluqueria.Models
             return res;
         }
 
-        //TODO: Quien modifica y que tanto?
         public int Modificacion(Turno t)
         {
             int res = -1;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"UPDATE Turnos
-                    SET fecha_turno=@fechaTurno, estado=@estado, id_cliente=@idCliente, id_servicio=@idServicio
+                    SET fecha_turno=@fechaTurno, estado=@estado, id_cliente=@idCliente, id_estilista_servicio=@id_estilista_Servicio
                     WHERE id_turno = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.AddWithValue("@fecha_turno", t.FechaTurno);
                     command.Parameters.AddWithValue("@estado", t.Estado);
                     command.Parameters.AddWithValue("@id_cliente", t.IdCliente);
-                    command.Parameters.AddWithValue("@id_servicio",t.IdServicio);
+                    command.Parameters.AddWithValue("@id_estilista_servicio",t.IdEstilistaServicio);
                     connection.Open();
                     res = command.ExecuteNonQuery();
                 }
@@ -80,7 +79,6 @@ namespace peluqueria.Models
             return res;
         }
 
-        //TODO: Revisar consulta y armado de t
         public List<Turno> ObtenerLista(int paginaNro = 1, int tamPagina = 10)
         {
             List<Turno> res = new List<Turno>();
@@ -90,11 +88,12 @@ namespace peluqueria.Models
                     c.nombre AS nombre_cliente, 
                     c.apellido AS apellido_cliente,
                     s.nombre AS nombre_servicio,
-                    p.nombre AS nombre_peluquero, p.apellido AS apellido_peluquero
+                    p.nombre AS nombre_estilista, p.apellido AS apellido_estilista
                     FROM Turnos t
                     INNER JOIN usuarios c ON t.id_cliente = c.id_usuario
-                    INNER JOIN Servicios s ON t.id_servicio = s.id_servicio
-                    INNER JOIN usuarios p ON s.id_peluquero = p.id_usuario
+                    INNER JOIN Estilista_Servicio es ON t.id_estilista_servicio = es.id_estilista_servicio
+                    INNER JOIN Usuarios p ON es.id_estilista = p.id_usuario
+                    INNER JOIN Servicios s ON es.id_servicio = s.id_servicio
                     ORDER BY t.id_turno
                     LIMIT @tamPagina OFFSET @offset";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
@@ -116,20 +115,21 @@ namespace peluqueria.Models
                             Cliente = new Usuario
                             {
                                 Nombre = reader.GetString("nombre_cliente"),
-                                Apellido = reader.GetString("apellido_cliente")
-                                
+                                Apellido = reader.GetString("apellido_cliente")                          
                             },
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
+                            EstilistaServicio = new EstilistaServicio
                             {
-                                Nombre = reader.GetString("nombre_servicio"),
+                                Servicio = new Servicio
+                                {
+                                    Nombre = reader.GetString("nombre_servicio"),
+                                },
+
                                 Estilista = new Usuario
                                 {
-                                    Nombre = reader.GetString("nombre_peluquero"),
-                                    Apellido = reader.GetString("apellido_peluquero")
+                                    Nombre = reader.GetString("nombre_estilista"),
+                                    Apellido = reader.GetString("apellido_estilista")
                                 }
                             }
-
                         };
                         res.Add(t);
                     }
@@ -168,11 +168,12 @@ namespace peluqueria.Models
                     c.nombre AS nombre_cliente, 
                     c.apellido AS apellido_cliente,
                     s.nombre AS nombre_servicio,
-                    p.nombre AS nombre_peluquero, p.apellido AS apellido_peluquero
+                    p.nombre AS nombre_estilista, p.apellido AS apellido_estilista
                     FROM Turno t
                     INNER JOIN usuarios c ON t.id_cliente = c.id_usuario
-                    INNER JOIN Servicios s ON t.id_servicio = s.id_servicio
-                    INNER JOIN usuarios p ON s.id_peluquero = p.id_usuario
+                    INNER JOIN Estilista_Servicio es ON t.id_estilista_servicio = es.id_estilista_servicio
+                    INNER JOIN Usuarios p ON es.id_estilista = p.id_usuario
+                    INNER JOIN Servicios s ON es.id_servicio = s.id_servicio
                     WHERE p.id_turno = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -192,17 +193,19 @@ namespace peluqueria.Models
                             Cliente = new Usuario
                             {
                                 Nombre = reader.GetString("nombre_cliente"),
-                                Apellido = reader.GetString("apellido_cliente")
-                                
+                                Apellido = reader.GetString("apellido_cliente")                             
                             },
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
+                            EstilistaServicio = new EstilistaServicio
                             {
-                                Nombre = reader.GetString("nombre_servicio"),
+                                Servicio = new Servicio
+                                {
+                                    Nombre = reader.GetString("nombre_servicio"),
+                                },
+
                                 Estilista = new Usuario
                                 {
-                                    Nombre = reader.GetString("nombre_peluquero"),
-                                    Apellido = reader.GetString("apellido_peluquero")
+                                    Nombre = reader.GetString("nombre_estilista"),
+                                    Apellido = reader.GetString("apellido_estilista")
                                 }
                             }
                         };
@@ -223,7 +226,6 @@ namespace peluqueria.Models
                             WHERE DATE(t.fecha_turno) = DATE(@fecha)
                                 AND t.id_servicio = @idServicio
                                 AND t.estado != 'Cancelada'";
-
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.AddWithValue("@fecha", fecha.ToString("yyyy-MM-dd"));
@@ -245,7 +247,7 @@ namespace peluqueria.Models
             return horasOcupadas;
         }
 
-        public List<Turno> ObtenerTurnosDiarios(int paginaNro = 1, int tamPagina = 10)
+        public List<Turno> ObtenerTurnosDiarios(int user, int paginaNro = 1, int tamPagina = 10)
         {
             List<Turno> res = new List<Turno>();
             DateTime fecha = DateTime.Today;
@@ -255,16 +257,18 @@ namespace peluqueria.Models
                     c.nombre AS nombre_cliente, 
                     c.apellido AS apellido_cliente,
                     s.nombre AS nombre_servicio,
-                    p.nombre AS nombre_peluquero, p.apellido AS apellido_peluquero
+                    p.nombre AS nombre_estilista, p.apellido AS apellido_estilista
                     FROM Turnos t
                     INNER JOIN usuarios c ON t.id_cliente = c.id_usuario
-                    INNER JOIN Servicios s ON t.id_servicio = s.id_servicio
-                    INNER JOIN usuarios p ON s.id_peluquero = p.id_usuario
-                    WHERE DATE(t.fecha_turno) = DATE(@fecha)
+                    INNER JOIN Estilista_Servicio es ON t.id_estilista_servicio = es.id_estilista_servicio
+                    INNER JOIN Usuarios p ON es.id_estilista = p.id_usuario
+                    INNER JOIN Servicios s ON es.id_servicio = s.id_servicio
+                    WHERE DATE(t.fecha_turno) = DATE(@fecha) AND p.id_usuario = @user
                     LIMIT @tamPagina OFFSET @offset";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.AddWithValue("@fecha", fecha);
+                    command.Parameters.AddWithValue("@user", user);
                     command.Parameters.AddWithValue("@tamPagina", tamPagina);
                     command.Parameters.AddWithValue("@offset", (paginaNro -1) * tamPagina);
                     connection.Open();
@@ -283,16 +287,18 @@ namespace peluqueria.Models
                             {
                                 Nombre = reader.GetString("nombre_cliente"),
                                 Apellido = reader.GetString("apellido_cliente")
-                                
                             },
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
+                            EstilistaServicio = new EstilistaServicio
                             {
-                                Nombre = reader.GetString("nombre_servicio"),
+                                Servicio = new Servicio
+                                {
+                                    Nombre = reader.GetString("nombre_servicio"),
+                                },
+
                                 Estilista = new Usuario
                                 {
-                                    Nombre = reader.GetString("nombre_peluquero"),
-                                    Apellido = reader.GetString("apellido_peluquero")
+                                    Nombre = reader.GetString("nombre_estilista"),
+                                    Apellido = reader.GetString("apellido_estilista")
                                 }
                             }
 
@@ -320,11 +326,12 @@ namespace peluqueria.Models
                         c.nombre AS nombre_cliente, 
                         c.apellido AS apellido_cliente,
                         s.nombre AS nombre_servicio,
-                        p.nombre AS nombre_peluquero, p.apellido AS apellido_peluquero
+                        p.nombre AS nombre_estilista, p.apellido AS apellido_estilista
                         FROM Turnos t
                         INNER JOIN usuarios c ON t.id_cliente = c.id_usuario
-                        INNER JOIN Servicios s ON t.id_servicio = s.id_servicio
-                        INNER JOIN usuarios p ON s.id_peluquero = p.id_usuario
+                        INNER JOIN Estilista_Servicio es ON t.id_estilista_servicio = es.id_estilista_servicio
+                        INNER JOIN Usuarios p ON es.id_estilista = p.id_usuario
+                        INNER JOIN Servicios s ON es.id_servicio = s.id_servicio
                         WHERE t.fecha_turno >= @lunes AND t.fecha_turno <= @domingo";
 
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
@@ -347,19 +354,20 @@ namespace peluqueria.Models
                             {
                                 Nombre = reader.GetString("nombre_cliente"),
                                 Apellido = reader.GetString("apellido_cliente")
-                                
                             },
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
+                            EstilistaServicio = new EstilistaServicio
                             {
-                                Nombre = reader.GetString("nombre_servicio"),
+                                Servicio = new Servicio
+                                {
+                                    Nombre = reader.GetString("nombre_servicio"),
+                                },
+
                                 Estilista = new Usuario
                                 {
-                                    Nombre = reader.GetString("nombre_peluquero"),
-                                    Apellido = reader.GetString("apellido_peluquero")
+                                    Nombre = reader.GetString("nombre_estilista"),
+                                    Apellido = reader.GetString("apellido_estilista")
                                 }
                             }
-
                         };
                         listaTurnos.Add(t);
                     }

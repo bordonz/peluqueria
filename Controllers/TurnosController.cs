@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using peluqueria.Models;
+using peluqueria.Services;
 
 namespace peluqueria.Controllers
 {
@@ -8,13 +9,15 @@ namespace peluqueria.Controllers
     {
         private readonly IRepositorioTurno repositorio;
         private readonly IRepositorioServicio repoServicio;
+        private readonly IRepositorioUsuario repoUsuario;
         private readonly IConfiguration config;
         private readonly ILogger<ServiciosController> logger;
 
-        public TurnosController(IRepositorioTurno repo, IRepositorioServicio repoServicio, IConfiguration config, ILogger<ServiciosController> logger)
+        public TurnosController(IRepositorioTurno repo, IRepositorioServicio repoServicio, IRepositorioUsuario repoUsuario, IConfiguration config, ILogger<ServiciosController> logger)
         {
             this.repositorio = repo;
             this.repoServicio = repoServicio;
+            this.repoUsuario = repoUsuario;
             this.config = config;
             this.logger = logger;
         }
@@ -192,8 +195,9 @@ namespace peluqueria.Controllers
         {
             try
             {
+                int user = this.UsuarioId();
                 var tamaño = 5;
-                var lista = repositorio.ObtenerTurnosDiarios(Math.Max(pagina, 1), tamaño);
+                var lista = repositorio.ObtenerTurnosDiarios(user, Math.Max(pagina, 1), tamaño);
                 ViewBag.pagina = pagina;
 
                 var total = repositorio.ObtenerCantidad();
