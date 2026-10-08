@@ -7,5 +7,6 @@ namespace peluqueria.Models
         Usuario? ObtenerPorId(int id);
         Usuario? ObtenerPorEmail(string email);
         List<Usuario> BuscarPorNombre(string nombre);
+        int CambiarClave(int idUsuario, string nuevaClave);
     }
 }

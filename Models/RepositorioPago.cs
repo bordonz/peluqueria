@@ -77,7 +77,7 @@ namespace peluqueria.Models
             List<Pago> res = new List<Pago>();
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT p.*, t.id_cliente, t.id_peluquero, t.id_servicio
+                string sql = @"SELECT p.*, t.id_cliente, t.id_servicio
                     FROM Pagos p
                     INNER JOIN Turnos t ON p.id_turno = t.id_turno
                     ORDER BY p.id_pago
@@ -102,7 +102,6 @@ namespace peluqueria.Models
                             Turno = new Turno
                             {
                                 IdCliente = reader.GetInt32("id_cliente"),
-                                IdPeluquero = reader.GetInt32("id_peluquero"),
                                 IdServicio = reader.GetInt32("id_servicio")
                             }
                         };
@@ -138,7 +137,7 @@ namespace peluqueria.Models
             Pago? p = null;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT p.*, t.id_cliente, t.id_peluquero, t.id_servicio
+                string sql = @"SELECT p.*, t.id_cliente, t.id_servicio
                     FROM Pagos p
                     INNER JOIN Turnos t ON p.id_turno = t.id_turno
                     WHERE p.id_pago = @id";
@@ -160,7 +159,6 @@ namespace peluqueria.Models
                             Turno = new Turno
                             {
                                 IdCliente = reader.GetInt32("id_cliente"),
-                                IdPeluquero = reader.GetInt32("id_peluquero"),
                                 IdServicio = reader.GetInt32("id_servicio")
                             }
                         };

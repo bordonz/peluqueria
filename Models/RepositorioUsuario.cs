@@ -237,5 +237,26 @@ namespace peluqueria.Models
             }
             return res;
         }
+
+		public int CambiarClave(int idUsuario, string nuevaClave)
+		{
+			int res = -1;
+			using (MySqlConnection connection = new MySqlConnection(connectionString))
+			{
+				string sql = @"UPDATE Usuarios
+					SET clave = @clave
+					WHERE id_usuario = @id";
+				using (MySqlCommand command = new MySqlCommand(sql, connection))
+				{
+					command.Parameters.AddWithValue("@clave", nuevaClave);
+					command.Parameters.AddWithValue("@id", idUsuario);
+
+					connection.Open();
+					res = command.ExecuteNonQuery();
+					connection.Close();
+				}
+			}
+			return res;
+		}
 	}
 }

@@ -7,6 +7,7 @@ namespace peluqueria.Models
 	{
 		Administrador = 1,
 		Empleado = 2,
+		Cliente = 3,
 	}
 
 	public class Usuario
