@@ -1,0 +1,94 @@
+@model peluqueria.Models.Turno
+
+@{
+    ViewData["Title"] = "Crear Turno";
+}
+
+<h4>Nuevo Turno</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group mb-3">
+                <label asp-for="FechaTurno" class="control-label">Fecha del Turno</label>
+                <input asp-for="FechaTurno" type="date" class="form-control" id="FechaTurno"
+                    min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                    max="@DateTime.Today.AddDays(29).ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="FechaTurno" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="IdServicio" class="control-label">Servicio</label>
+                @Html.DropDownListFor(m => m.IdServicio,
+                         (SelectList)ViewBag.Servicio,
+                         "Seleccione un servicio",
+                         new { @class = "form-control select2-busqueda", id = "IdServicio" })
+                <span asp-validation-for="IdServicio" class="text-danger"></span>
+            </div>
+            <input type="hidden" id="HoraTurno" name="HoraTurno" />
+            <div class="form-group mb-3">
+                <label class="form-label font-weight-bold">Horarios Disponibles</label>
+                <div id="contenedor-horarios" class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="text-muted">Seleccione fecha y servicio para ver horarios.</span>
+                </div>
+                <span id="error-hora" class="text-danger small"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Crear Turno" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<div>
+    <a asp-action="Index">Volver a la Lista</a>
+</div>
+
+@section Scripts {
+    <script>
+        function cargarHorarios() {
+            var idServicio = $("#IdServicio").val();
+            var fecha = $("#FechaTurno").val();
+
+            if (idServicio && fecha) {
+                $.ajax({
+                    url: '@Url.Action("ObtenerHorariosDisponibles", "Turnos")',
+                    type: 'GET',
+                    data: { fecha: fecha, idServicio: idServicio },
+                    success: function (horarios) {
+                        var $contenedor = $("#contenedor-horarios");
+                        $contenedor.empty();
+
+                        if (!horarios || horarios.length === 0) {
+                            $contenedor.html('<div class="alert alert-warning p-2 w-100">No hay turnos libres para esta fecha.</div>');
+                        } else {
+                            $.each(horarios, function (i, hora) {
+                                var $btn = $('<button type="button" class="btn btn-outline-primary btn-hora m-1">' + hora + '</button>');
+
+                                $btn.on("click", function () {
+                                    $(".btn-hora").removeClass("btn-primary text-white").addClass("btn-outline-primary");
+                                    $(this).removeClass("btn-outline-primary").addClass("btn-primary text-white");
+
+                                    $("#HoraTurno").val(hora);
+                                    $("#error-hora").text("");
+                                });
+                                $contenedor.append($btn);
+                            });
+                        }
+                    },
+                    error: function () {
+                        $("#contenedor-horarios").html('<span class="text-danger">Ocurrió un error al cargar los horarios.</span>');
+                    }
+                });
+            } else {
+                $("#contenedor-horarios").html('<span class="text-muted">Seleccione fecha y servicio para ver horarios.</span>');
+                $("#HoraTurno").val("");
+            }
+        }
+
+        $(document).ready(function () {
+            $("#IdServicio, #FechaTurno").on("change", function () {
+                cargarHorarios();
+            });
+        });
+    </script>
+}

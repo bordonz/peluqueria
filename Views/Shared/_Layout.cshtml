@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - peluqueria</title>
+    <title>@ViewData["Title"] - Navajas</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -14,42 +14,73 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" />
 
 </head>
-<body>
+<body onload="init()">
+    @{
+		bool IsAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+		@* Identity.Name ahora es el Id; para mostrar se usa el claim FullName *@
+		var NombreUsuario = User?.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? "";
+		var IsAdmin = User?.IsInRole("Administrador") ?? false;
+	}
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">peluqueria</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Servicios" asp-action="Index">Servicios</a>
-                        </li>
-                    </ul>
-                </div>
+                @if (!IsAuthenticated)
+                {
+                    <a class="py-2" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i> Inicio</a>
+					<a href="@Url.Action("Login", "Usuarios")"><i class="fa-solid fa-right-to-bracket"></i> Acceder</a>
+                }
+                else
+                {
+                    @if (IsAdmin)
+                    {
+                        <a class="py-2 d-none d-md-inline-block" asp-controller="Usuarios" asp-action="Index"><i class="fa-solid fa-user"></i> Usuarios</a>
+                    }
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">peluqueria</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Servicios" asp-action="Index">Servicios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Turnos" asp-action="Index">Turnos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Usuarios" asp-action="Perfil">
+                                    <i class="fa-solid fa-user"></i> @NombreUsuario
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Usuarios" asp-action="Logout">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Salir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
             </div>
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+@*     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - peluqueria - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
+    </footer> *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -58,6 +89,61 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <script type="text/javascript">
+		const notyf = new Notyf({
+			duration: 8500,
+			types: [
+				{
+					type: 'info',
+					background: '#056C5C',
+					icon: {
+						className: 'fa-solid fa-circle-info',
+						tagName: 'i',
+						color: 'white'
+					}
+				}
+			]
+		});
+		function init() {
+			let error = "@(ViewBag.Error??"")";
+			let mensaje = "@(ViewBag.Mensaje??"")";
+			let id = +"@(ViewBag.Id??0)";
+			notyf.info = function(mensaje) {
+				notyf.open({
+					type: 'info',
+					message: mensaje,
+				});
+			}
+			if(error) {
+				notyf.error(error);
+			}
+			if(mensaje) {
+				notyf.info(mensaje);
+			}
+			if(id) {
+				notyf.success(`La entidad fue dada de alta con id: ${id}`);
+			}
+		}
+        function cambiarPagina(direccion, boton) {
+            var paginaN = parseInt(boton.dataset.pagina);
+            var controlador = boton.dataset.controller;
+            var action = boton.dataset.action;
+            var id = boton.dataset.id;
+            if(direccion === "atras" && paginaN > 1) {
+                paginaN --;
+            } else if(direccion === "adelante") {
+                paginaN ++;
+            }
+            var url = "/" + controlador + "/" + action + "?pagina=" + paginaN;
+                if (id) {
+                    url += "&id=" + id;
+                }
+
+            window.location.href = url;
+        }
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
