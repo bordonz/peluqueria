@@ -102,7 +102,7 @@ namespace peluqueria.Models
                             Turno = new Turno
                             {
                                 IdCliente = reader.GetInt32("id_cliente"),
-                                IdServicio = reader.GetInt32("id_servicio")
+                                /* IdServicio = reader.GetInt32("id_servicio") */
                             }
                         };
                         res.Add(p);
@@ -159,7 +159,7 @@ namespace peluqueria.Models
                             Turno = new Turno
                             {
                                 IdCliente = reader.GetInt32("id_cliente"),
-                                IdServicio = reader.GetInt32("id_servicio")
+                                /* IdServicio = reader.GetInt32("id_servicio") */
                             }
                         };
                     }

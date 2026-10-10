@@ -40,17 +40,14 @@
             <th>
 				@Html.DisplayNameFor(model => model.Cliente.Apellido)
 			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.IdServicio)
+            <th>
+				@Html.DisplayNameFor(model => model.EstilistaServicio.Servicio.Nombre)
 			</th>
             <th>
-				@Html.DisplayNameFor(model => model.Servicio.Nombre)
+				@Html.DisplayNameFor(model => model.EstilistaServicio.Estilista.Nombre)
 			</th>
             <th>
-				@Html.DisplayNameFor(model => model.Servicio.Estilista.Nombre)
-			</th>
-            <th>
-				@Html.DisplayNameFor(model => model.Servicio.Estilista.Apellido)
+				@Html.DisplayNameFor(model => model.EstilistaServicio.Estilista.Apellido)
 			</th>
 			<th></th>
 		</tr>
@@ -81,16 +78,13 @@
 					@Html.DisplayFor(modelItem => item.Cliente.Apellido)
 				</td>
                 <td>
-					@Html.DisplayFor(modelItem => item.IdServicio)
+					@Html.DisplayFor(modelItem => item.EstilistaServicio.Servicio.Nombre)
 				</td>
                 <td>
-					@Html.DisplayFor(modelItem => item.Servicio.Nombre)
+					@Html.DisplayFor(modelItem => item.EstilistaServicio.Estilista.Nombre)
 				</td>
                 <td>
-					@Html.DisplayFor(modelItem => item.Servicio.Estilista.Nombre)
-				</td>
-                <td>
-					@Html.DisplayFor(modelItem => item.Servicio.Estilista.Apellido)
+					@Html.DisplayFor(modelItem => item.EstilistaServicio.Estilista.Apellido)
 				</td>
 				<td>
 					<div class="btn-group" role="group">

@@ -94,7 +94,7 @@ namespace peluqueria.Controllers
             {
                 logger.LogError(ex, "Error en Create de Turnos");
                 var servicios = repoServicio.ObtenerTodos();
-                ViewBag.Servicio = new SelectList(servicios, "IdServicio", "Nombre", t.IdServicio);
+                ViewBag.Servicio = new SelectList(servicios, "IdServicio", "Nombre");
                 ViewBag.Error = "Error al crear el Turno: " + ex.Message;
                 
                 return View(t);

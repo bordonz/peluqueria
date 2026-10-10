@@ -32,12 +32,6 @@
                 <input asp-for="Precio" class="form-control" />
                 <span asp-validation-for="Precio" class="text-danger"></span>
             </div>
-            <div class="form-group">
-				<label class="control-label">Usuario</label>
-				<select id="Usuario" class="form-control" name="UsuarioId">
-					<option value="@Model?.IdEstilista" selected>@Model?.Estilista?.Nombre @Model?.Estilista?.Apellido</option>
-				</select>
-			</div>
             <div class="form-group form-check">
 				<label asp-for="Activo" class="control-label"></label>
 				<input asp-for="Activo" class="form-check.input" />
@@ -53,7 +47,7 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
-
+@* 
 @section Scripts {
 	<script type="text/javascript">
 		$(document).ready(function() {
@@ -81,4 +75,4 @@
 			});
 		});
 	</script>
-}
+} *@
