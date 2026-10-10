@@ -39,6 +39,7 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Empleado", policy => policy.RequireRole("Empleado", "Administrador"));
     options.AddPolicy("Administrador", policy => policy.RequireRole("Administrador"));
+    options.AddPolicy("Cliente", policy => policy.RequireRole("Cliente"));
 });
 
 // Add services to the container.

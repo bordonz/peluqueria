@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/peluqueria.styles.css" asp-append-version="true" />
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <!-- Select2 + Theme Bootstrap 4 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" />
-
+    @RenderSection("Styles", required: false)
 </head>
 <body onload="init()">
     @{
@@ -75,12 +76,6 @@
             @RenderBody()
         </main>
     </div>
-
-@*     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - peluqueria - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer> *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -89,6 +84,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
     <script type="text/javascript">
 		const notyf = new Notyf({
@@ -102,7 +98,20 @@
 						tagName: 'i',
 						color: 'white'
 					}
-				}
+				},
+                {
+                    type: 'error',
+                    background: '#e63946',
+                    icon: {
+                        className: 'fa-solid fa-circle-exclamation',
+                        tagName: 'i',
+                        color: 'white'
+                    }
+                },
+                {
+                    type: 'success',
+                    background: '#056C5C'
+                }
 			]
 		});
 		function init() {
@@ -119,7 +128,10 @@
 				notyf.error(error);
 			}
 			if(mensaje) {
-				notyf.info(mensaje);
+                notyf.open({
+                    type: 'info',
+                    message: mensaje
+                });
 			}
 			if(id) {
 				notyf.success(`La entidad fue dada de alta con id: ${id}`);

@@ -62,7 +62,7 @@ namespace peluqueria.Controllers
 		}
 
 		// GET: Usuarios/Create
-		[Authorize(Policy = "Administrador")]
+		[AllowAnonymous]
 		public ActionResult Create()
 		{
 			ViewBag.Roles = Usuario.ObtenerRoles();
@@ -72,7 +72,7 @@ namespace peluqueria.Controllers
 		// POST: Usuarios/Create
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		[Authorize(Policy = "Administrador")]
+		[AllowAnonymous]
 		public ActionResult Create(Usuario u)
 		{
 			if (!ModelState.IsValid) 
@@ -80,6 +80,11 @@ namespace peluqueria.Controllers
 				ViewBag.Error = "Complete todos los campos requeridos correctamente.";
 				ViewBag.Roles = Usuario.ObtenerRoles();
 				return View(u);
+			}
+
+			if (!User.IsInRole("Administrador"))
+			{
+				u.Rol = 3;
 			}
 
 			try
@@ -126,6 +131,13 @@ namespace peluqueria.Controllers
 		[Authorize]
 		public ActionResult Perfil()
 		{
+			if (TempData.ContainsKey("Error"))
+			{
+				ViewBag.Mensaje = TempData["Error"];
+			}else if (TempData.ContainsKey("Mensaje"))
+			{
+				ViewBag.Mensaje = TempData["Mensaje"];
+			}
 			ViewData["Title"] = "Mi perfil";
 			var u = repositorio.ObtenerPorId(this.UsuarioId());
 			ViewBag.Roles = Usuario.ObtenerRoles();
@@ -136,6 +148,14 @@ namespace peluqueria.Controllers
 		[Authorize(Policy = "Administrador")]
 		public ActionResult Edit(int id)
 		{
+			if (TempData.ContainsKey("Error"))
+			{
+				ViewBag.Mensaje = TempData["Error"];
+			}else if (TempData.ContainsKey("Mensaje"))
+			{
+				ViewBag.Mensaje = TempData["Mensaje"];
+			}
+
 			ViewData["Title"] = "Editar usuario";
 			var u = repositorio.ObtenerPorId(id);
 			ViewBag.Roles = Usuario.ObtenerRoles();
@@ -146,16 +166,16 @@ namespace peluqueria.Controllers
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		[Authorize]
-		public ActionResult Edit(int id, Usuario u)
+		public async Task<ActionResult> Edit(int id, Usuario u)
 		{
 			var vista = nameof(Edit);//de que vista provengo
 			try
 			{
-				if (!User.IsInRole("Administrador"))//no soy admin
+				if (!User.IsInRole("Administrador"))
 				{
-					vista = nameof(Perfil);//solo puedo ver mi perfil
+					vista = nameof(Perfil);
 					// El Id ya viene en la cookie: se compara directo, sin ir a la BD.
-					if (this.UsuarioId() != id)//si no es admin, solo puede modificarse él mismo
+					if (this.UsuarioId() != id)
 						return RedirectToAction(nameof(Index), "Home");
 				}
 
@@ -164,17 +184,35 @@ namespace peluqueria.Controllers
                     ViewBag.Roles = Usuario.ObtenerRoles();
                     return View("Edit", u);
                 }
-
+				bool huboCambios;
                 var usuarioE = repositorio.ObtenerPorId(id);
-                if (usuarioE == null)
-                {
-                    return NotFound();
-                }
+				if (usuarioE == null)
+				{
+					return NotFound();
+				}
+				else
+				{
+					huboCambios = usuarioE.Nombre != u.Nombre ||
+						usuarioE.Apellido != u.Apellido ||
+						usuarioE.Email != u.Email ||
+						(User.IsInRole("Administrador") && usuarioE.Rol != u.Rol) ||
+						(u.AvatarFile != null && u.AvatarFile.Length > 0);
+				}
+
+				if (!huboCambios)
+				{
+					ViewBag.Error = "No se realizaron cambios.";
+					ViewBag.Roles = Usuario.ObtenerRoles();
+					return View("Edit", usuarioE);
+				}
 
                 usuarioE.Nombre = u.Nombre;
                 usuarioE.Apellido = u.Apellido;
                 usuarioE.Email = u.Email;
-                usuarioE.Rol = u.Rol;
+				if (User.IsInRole("Administrador"))
+				{
+                	usuarioE.Rol = u.Rol;
+				}
 
                 // Si subió avatar nuevo
                 if (u.AvatarFile != null && u.AvatarFile.Length > 0)
@@ -195,6 +233,16 @@ namespace peluqueria.Controllers
                 }
 
                 repositorio.Modificacion(usuarioE);
+				var claims = new List<Claim>
+				{
+					new Claim(ClaimTypes.NameIdentifier, usuarioE.IdUsuario.ToString()),
+					new Claim(ClaimTypes.Name, usuarioE.Email),
+					new Claim("FullName", usuarioE.Nombre + " " + usuarioE.Apellido),
+					new Claim(ClaimTypes.Role, usuarioE.Rol.ToString())
+				};
+
+				var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+				await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                 ViewBag.Mensaje = "Datos guardados correctamente.";
 				ViewBag.Roles = Usuario.ObtenerRoles();
 				
