@@ -49,6 +49,7 @@ builder.Services.AddScoped<IRepositorioTurno, RepositorioTurno>();
 builder.Services.AddScoped<IRepositorioPago, RepositorioPago>();
 builder.Services.AddScoped<IRepositorioServicio, RepositorioServicio>();
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
+builder.Services.AddScoped<IRepositorioEstilistaServicio, RepositorioEstilistaServicio>();
 
 var app = builder.Build();
 

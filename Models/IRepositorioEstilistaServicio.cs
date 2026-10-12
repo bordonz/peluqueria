@@ -5,5 +5,7 @@ namespace peluqueria.Models
         List<EstilistaServicio> ObtenerLista(int paginaNro, int tamPagina);
         int ObtenerCantidad();
         EstilistaServicio? ObtenerPorId(int id);
+        public List<Usuario> BuscarEstilista(string nombre);
+        bool VerificarVinculo(int idE, int id);
     }
 }

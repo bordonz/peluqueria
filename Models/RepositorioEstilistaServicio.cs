@@ -1,4 +1,6 @@
+using System.Data;
 using MySql.Data.MySqlClient;
+using Org.BouncyCastle.Cms;
 
 namespace peluqueria.Models
 {
@@ -169,6 +171,63 @@ namespace peluqueria.Models
                 }
                 return s;
             }
+        }
+
+        public List<Usuario> BuscarEstilista(string nombre)
+        {
+            List<Usuario> res = new List<Usuario>();
+            nombre = "%" + nombre + "%";
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT u.*
+                    FROM Usuarios u
+                    WHERE nombre LIKE @nombre OR apellido LIKE @nombre";
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.Add("@nombre", MySqlDbType.VarChar).Value = nombre;;
+                    command.CommandType = CommandType.Text;
+                    connection.Open();
+                    var reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        var u = new Usuario
+                        {    
+                            IdUsuario = reader.GetInt32("id_usuario"),
+                            Nombre = reader.GetString("nombre"),
+                            Apellido = reader.GetString("apellido"),
+                            Email = reader.GetString("email"),
+                        };
+                        res.Add(u);
+                    }
+                    connection.Close();
+                }
+            }
+            return res;
+        }
+
+        public bool VerificarVinculo(int idServicio, int idEstilista)
+        {
+            bool existe;
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT EXISTS(SELECT 1
+                    FROM estilista_servicios
+                    WHERE id_estilista = @idEstilista AND id_servicio = @idServicio)";
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@idEstilista", idEstilista);
+                    command.Parameters.AddWithValue("@idServicio", idServicio);
+                    connection.Open();
+                    var resultado = command.ExecuteScalar();
+                    existe = Convert.ToBoolean(resultado);
+                    connection.Close();
+                }
+            }
+            if (existe)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

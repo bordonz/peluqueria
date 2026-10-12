@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using peluqueria.Models;
 
 namespace peluqueria.Controllers
@@ -141,6 +142,14 @@ namespace peluqueria.Controllers
                 TempData["Error"] = "Error al dar de baja el servicio";
                 return RedirectToAction(nameof(Delete));
             }
+        }
+
+        [HttpGet]
+        public ActionResult ObtenerTodos()
+        {
+            var servicios = repositorio.ObtenerTodos();
+                ViewBag.IdServicio = new SelectList(servicios, "IdServicio", "Nombre");
+                return View();
         }
     }
 }
