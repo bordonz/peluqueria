@@ -56,6 +56,9 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Turnos" asp-action="Index">Turnos</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="EstilistaServicios" asp-action="VincularEstilista">Vincular</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" asp-controller="Usuarios" asp-action="Perfil">
                                     <i class="fa-solid fa-user"></i> @NombreUsuario
                                 </a>
@@ -115,8 +118,8 @@
 			]
 		});
 		function init() {
-			let error = "@(ViewBag.Error??"")";
-			let mensaje = "@(ViewBag.Mensaje??"")";
+			let error = "@(TempData["Error"] ?? ViewBag.Error ?? "")";
+            let mensaje = "@(TempData["Mensaje"] ?? ViewBag.Mensaje ?? "")";
 			let id = +"@(ViewBag.Id??0)";
 			notyf.info = function(mensaje) {
 				notyf.open({
