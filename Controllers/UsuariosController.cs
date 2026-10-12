@@ -25,7 +25,7 @@ namespace peluqueria.Controllers
 		}
 
         //GET: Usuarios/Buscar/5
-        [Route("[controller]/Buscar/{q}", Name = "Buscar")]
+        [Route("Usuarios/Buscar/{q}", Name = "Buscar")]
         public IActionResult Buscar(string q)
         {
             try

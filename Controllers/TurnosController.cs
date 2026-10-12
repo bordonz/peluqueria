@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using peluqueria.Models;
@@ -5,6 +6,7 @@ using peluqueria.Services;
 
 namespace peluqueria.Controllers
 {
+    [Authorize]
     public class TurnosController : Controller
     {
         private readonly IRepositorioTurno repositorio;

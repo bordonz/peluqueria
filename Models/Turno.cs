@@ -8,7 +8,7 @@ namespace peluqueria.Models
         public string Estado { get; set; } = "";
         public int IdCliente { get; set; }
         public Usuario? Cliente { get; set; }
-        public int IdEstilistaServicio { get; set; }
-         public EstilistaServicio? EstilistaServicio { get; set; }
+        public int IdEstilistaServicios { get; set; }
+         public EstilistaServicio? EstilistaServicios { get; set; }
     }
 }
