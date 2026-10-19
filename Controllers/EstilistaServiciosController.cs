@@ -18,6 +18,32 @@ namespace peluqueria.Controllers
             this.config = config;
             this.logger = logger;
         }
+
+        //GET: EstilistoServicios/Index
+        public ActionResult Index(int pagina = 1)
+        {
+            try
+            {
+                var tamaño = 5;
+                var lista = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño);
+                ViewBag.pagina = pagina;
+                var total = repositorio.ObtenerCantidad();
+                ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño +1;
+                ViewBag.id = TempData["id"];
+
+                if (TempData.ContainsKey("Mensaje"))
+                {
+                    ViewBag.Mensaje = TempData["Mensaje"];
+                }
+                return View(lista);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error en index de Servicios");
+                throw;
+            }
+        }
+
         [HttpGet]
         public IActionResult VincularEstilista()
         {
@@ -32,7 +58,7 @@ namespace peluqueria.Controllers
             return Json( new { datos = res });
         }
 
-        //POST: Servicios/Create
+        //POST: EstilistaServicios/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(EstilistaServicio s)
@@ -53,6 +79,33 @@ namespace peluqueria.Controllers
                 logger.LogError(ex, "Error en Create de EstilistaServicio");
                 TempData["Error"] = "Error al vincular el estilista al servicio";
                 return RedirectToAction(nameof(VincularEstilista));
+            }
+        }
+
+        //GET: EstilistaServicios/Delete
+        public ActionResult Delete(int id)
+        {
+            var entidad = repositorio.ObtenerPorId(id);
+            return View(entidad);
+        }
+
+        //POST: EstilistaServicios/Delete
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(int id, EstilistaServicio e)
+        {
+            try
+            {
+                //TODO: Validar que nos devuelva un id valido
+                repositorio.Baja(id);
+                TempData["Mensaje"] = "Vinculo de estilista servicio dado de baja";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error en Delete de EstilistaServiciosController");
+                TempData["Error"] = "Error al dar de baja el vinculo";
+                return RedirectToAction(nameof(Delete));
             }
         }
     }

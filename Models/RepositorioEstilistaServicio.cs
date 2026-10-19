@@ -37,7 +37,7 @@ namespace peluqueria.Models
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"DELETE FROM Estilista_Servicios
-                    WHERE id_estilista_serivcio = @id";
+                    WHERE id_estilista_servicios = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.AddWithValue("@id", id);
@@ -51,19 +51,6 @@ namespace peluqueria.Models
         public int Modificacion(EstilistaServicio s)
         {
             int res = -1;
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                string sql = @"UPDATE Estilista_Servicios                 
-                    SET id_estilista=@idEstilista, id_servicio=@idServicio
-                    WHERE id_estilista_servicio = @id";
-                using (MySqlCommand command = new MySqlCommand(sql, connection))
-                {
-                    command.Parameters.AddWithValue("@idEstilista", s.IdEstilista);
-                    command.Parameters.AddWithValue("@idServicio", s.IdServicio);
-                    connection.Open();
-                    res = command.ExecuteNonQuery();
-                }
-            }
             return res;
         }
 
@@ -72,11 +59,12 @@ namespace peluqueria.Models
             List<EstilistaServicio> res = new List<EstilistaServicio>();
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT e.*, p.nombre AS estilista_nombre, p.apellido AS estilista_apellido, s.*
+                string sql = @"SELECT e.*, p.nombre AS estilista_nombre, p.apellido AS estilista_apellido,
+                    s.nombre AS nombre_servicio, s.precio
                     FROM Estilista_Servicios e
                     INNER JOIN Usuarios p ON e.id_estilista = p.id_usuario
                     INNER JOIN Servicios s ON e.id_servicio = s.id_servicio
-                    ORDER BY e.id_estilista_servicio
+                    ORDER BY e.id_estilista_servicios
                     LIMIT @tamPagina OFFSET @offset";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -89,20 +77,19 @@ namespace peluqueria.Models
                     {
                         EstilistaServicio s = new EstilistaServicio
                         {
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
-                            {
-                                Nombre = reader.GetString("nombre"),
-                                Descripcion = reader.GetString("descripcion"),
-                                Duracion = reader.GetString("duracion"),
-                                Precio = reader.GetDecimal("precio"),
-                            },
-                            IdEstilista = reader.GetInt32("id_peluquero"),
+                            IdEstilistaServicio = reader.GetInt32("id_estilista_servicios"),
+                            IdEstilista = reader.GetInt32("id_estilista"),
                             Estilista = new Usuario
                             {
                                 Nombre = reader.GetString("estilista_nombre"),
                                 Apellido = reader.GetString("estilista_apellido")
                             },
+                            IdServicio = reader.GetInt32("id_servicio"),
+                            Servicio = new Servicio
+                            {
+                                Nombre = reader.GetString("nombre_servicio"),
+                                Precio = reader.GetDecimal("precio"),
+                            }
                         };
                         res.Add(s);
                     }
@@ -116,8 +103,8 @@ namespace peluqueria.Models
             int res = 0;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT COUNT(id_servicio)
-                    FROM Servicios";
+                string sql = @"SELECT COUNT(id_estilista_servicios)
+                    FROM estilista_servicios";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     connection.Open();
@@ -131,17 +118,17 @@ namespace peluqueria.Models
             return res;
         }
 
-        //TODO: Corregir join
         public EstilistaServicio? ObtenerPorId(int id)
         {
             EstilistaServicio? s = null;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT e.*, p.nombre AS estilista_nombre, p.apellido AS estilista_apellido, s.*
+                string sql = @"SELECT e.*, p.nombre AS estilista_nombre, p.apellido AS estilista_apellido,
+                    s.nombre AS nombre_servicio, s.descripcion
                     FROM Estilista_Servicios e
                     INNER JOIN Usuarios p ON e.id_estilista = p.id_usuario
                     INNER JOIN Servicios s ON e.id_servicio = s.id_servicio
-                    WHERE s.id_servicio = @id";
+                    WHERE e.id_estilista_servicios = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.Add("@id", MySqlDbType.Int32).Value = id;
@@ -152,20 +139,19 @@ namespace peluqueria.Models
                     {
                         s = new EstilistaServicio
                         {
-                            IdServicio = reader.GetInt32("id_servicio"),
-                            Servicio = new Servicio
-                            {
-                                Nombre = reader.GetString("nombre"),
-                                Descripcion = reader.GetString("descripcion"),
-                                Duracion = reader.GetString("duracion"),
-                                Precio = reader.GetDecimal("precio"),
-                            },
-                            IdEstilista = reader.GetInt32("id_peluquero"),
+                            IdEstilistaServicio = reader.GetInt32("id_estilista_servicios"),
+                            IdEstilista = reader.GetInt32("id_estilista"),
                             Estilista = new Usuario
                             {
                                 Nombre = reader.GetString("estilista_nombre"),
                                 Apellido = reader.GetString("estilista_apellido")
                             },
+                            IdServicio = reader.GetInt32("id_servicio"),
+                            Servicio = new Servicio
+                            {
+                                Nombre = reader.GetString("nombre_servicio"),
+                                Descripcion = reader.GetString("descripcion"),
+                            }
                         };
                     }
                 }
