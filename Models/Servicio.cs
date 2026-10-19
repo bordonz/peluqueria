@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace peluqueria.Models
 {
     public class Servicio
@@ -8,5 +10,8 @@ namespace peluqueria.Models
         public string Duracion { get; set; } = "";
         public decimal Precio { get; set; }
         public bool Activo { get; set; } = true;
+        public string? Avatar { get; set; }
+		[NotMapped]
+		public IFormFile? AvatarFile { get; set; }
     }
 }

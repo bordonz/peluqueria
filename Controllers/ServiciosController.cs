@@ -18,8 +18,28 @@ namespace peluqueria.Controllers
             this.logger = logger;
         }
 
+        public ActionResult IndexApi(int pagina = 1)
+        {
+            return View();
+        }
+
+        public ActionResult EditApi()
+        {
+            return View();
+        }
+
+        public ActionResult CreateApi()
+        {
+            return View();
+        }
+
+        public ActionResult DeleteApi()
+        {
+            return View();
+        }
+
         //GET: Servicios/Index
-        public ActionResult Index(int pagina = 1)
+        /* public ActionResult Index(int pagina = 1)
         {
             try
             {
@@ -41,7 +61,7 @@ namespace peluqueria.Controllers
                 logger.LogError(ex, "Error en index de Servicios");
                 throw;
             }
-        }
+        } */
 
         //GET: Servicios/Create
         public ActionResult Create()

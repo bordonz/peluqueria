@@ -11,39 +11,70 @@ namespace peluqueria.Models
         public int Alta(Servicio s)
         {
             int res = -1;
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            if (!ValidarNombre(s.Nombre))
             {
-                string sql = @"INSERT INTO Servicios
-                    (nombre, descripcion, duracion, precio, activo)
-                    VALUES (@nombre, @descripcion, @duracion, @precio, @activo);
-                    SELECT LAST_INSERT_ID();";
-                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
-                    command.Parameters.AddWithValue("@nombre", s.Nombre);
-                    command.Parameters.AddWithValue("@descripcion", s.Descripcion);
-                    command.Parameters.AddWithValue("@duracion", s.Duracion);
-                    command.Parameters.AddWithValue("@precio", s.Precio);
-                    command.Parameters.AddWithValue("@activo", s.Activo);
-                    connection.Open();
-                    res = Convert.ToInt32(command.ExecuteScalar());
-                    s.IdServicio = res;
+                    string sql = @"INSERT INTO Servicios
+                        (nombre, descripcion, duracion, precio, activo, avatar)
+                        VALUES (@nombre, @descripcion, @duracion, @precio, @activo, @avatar);
+                        SELECT LAST_INSERT_ID();";
+                    using (MySqlCommand command = new MySqlCommand(sql, connection))
+                    {
+                        command.Parameters.AddWithValue("@nombre", s.Nombre);
+                        command.Parameters.AddWithValue("@descripcion", s.Descripcion);
+                        command.Parameters.AddWithValue("@duracion", s.Duracion);
+                        command.Parameters.AddWithValue("@precio", s.Precio);
+                        command.Parameters.AddWithValue("@activo", s.Activo);
+                        if (String.IsNullOrEmpty(s.Avatar))
+                            command.Parameters.AddWithValue("@avatar", DBNull.Value);
+                        else
+                            command.Parameters.AddWithValue("@avatar", s.Avatar);
+                        connection.Open();
+                        res = Convert.ToInt32(command.ExecuteScalar());
+                        s.IdServicio = res;
+                    }
                 }
             }
             return res;
         }
 
+        public Boolean ValidarNombre(string nombre)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT EXISTS (
+                        SELECT 1 
+                        FROM servicios
+                        WHERE nombre = @nombre
+                    );";
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@nombre", nombre);
+                    connection.Open();
+                    var result = command.ExecuteScalar();
+
+                    return Convert.ToBoolean(result);
+                }
+            }
+        }
+
         public int Baja(int id)
         {
             int res = -1;
+            var entidad = ObtenerPorId(id);
+            if (entidad != null)
+            {
+                entidad.Activo = !entidad.Activo;
+            }
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                bool estado = false;
                 string sql = @"UPDATE Servicios
                     SET activo=@activo
-                    WHERE id_serivcio = @id";
+                    WHERE id_servicio = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
-                    command.Parameters.AddWithValue("@activo", estado);
+                    command.Parameters.AddWithValue("@activo", entidad.Activo);
                     command.Parameters.AddWithValue("@id", id);
                     connection.Open();
                     res = command.ExecuteNonQuery();
@@ -58,7 +89,7 @@ namespace peluqueria.Models
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"UPDATE Servicios                 
-                    SET nombre=@nombre, descripcion=@descripcion, duracion=@duracion, precio=@precio, activo=@activo
+                    SET nombre=@nombre, descripcion=@descripcion, duracion=@duracion, precio=@precio, avatar=@avatar
                     WHERE id_servicio = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
@@ -66,7 +97,11 @@ namespace peluqueria.Models
                     command.Parameters.AddWithValue("@descripcion", s.Descripcion);
                     command.Parameters.AddWithValue("@duracion", s.Duracion);
                     command.Parameters.AddWithValue("@precio", s.Precio);
-                    command.Parameters.AddWithValue("@activo", s.Activo);
+                    if (String.IsNullOrEmpty(s.Avatar))
+						command.Parameters.AddWithValue("@avatar", DBNull.Value);
+					else
+						command.Parameters.AddWithValue("@avatar", s.Avatar);
+                    command.Parameters.AddWithValue("@id", s.IdServicio);
                     connection.Open();
                     res = command.ExecuteNonQuery();
                 }
@@ -75,17 +110,19 @@ namespace peluqueria.Models
         }
 
         //TODO: Obtener relacionando con la tabla EstilistaServicio
-        public List<Servicio> ObtenerLista(int paginaNro = 1, int tamPagina = 10)
+        public List<Servicio> ObtenerLista(int paginaNro = 1, int tamPagina = 10, Boolean activo = true)
         {
             List<Servicio> res = new List<Servicio>();
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT s.*,
+                string sql = @"SELECT s.*
                     FROM Servicios s
+                    WHERE activo = @activo
                     ORDER BY s.id_servicio
                     LIMIT @tamPagina OFFSET @offset";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
+                    command.Parameters.AddWithValue("@activo", activo);
                     command.Parameters.AddWithValue("@tamPagina", tamPagina);
                     command.Parameters.AddWithValue("@offset", (paginaNro -1) * tamPagina);
                     connection.Open();
@@ -101,6 +138,7 @@ namespace peluqueria.Models
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
                             Activo = reader.GetBoolean("activo"),
+                            Avatar = reader["avatar"] is DBNull ? null : reader.GetString("avatar"),
                         };
                         res.Add(s);
                     }
@@ -154,6 +192,7 @@ namespace peluqueria.Models
                             Duracion = reader.GetString("duracion"),
                             Precio = reader.GetDecimal("precio"),
                             Activo = reader.GetBoolean("activo"),
+                            Avatar = reader["avatar"] is DBNull ? null : reader.GetString("avatar"),
                         };
                     }
                 }
