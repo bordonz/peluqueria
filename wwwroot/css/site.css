@@ -19,7 +19,12 @@ html {
 
 body {
 /*   margin-bottom: 60px; */
-  overflow: hidden;
+/*   overflow: hidden; */
+/*   background-color: #f4f5f7; */
+}
+
+.bg-custom {
+  background-color: #344E41;
 }
 
 .imagen {

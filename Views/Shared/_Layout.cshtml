@@ -8,7 +8,11 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/peluqueria.styles.css" asp-append-version="true" />
-
+    <style>
+        .bg-custom {
+            background-color: #344E41 !important;
+    }
+</style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <!-- Select2 + Theme Bootstrap 4 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
@@ -23,7 +27,7 @@
 		var IsAdmin = User?.IsInRole("Administrador") ?? false;
 	}
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-custom border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 @if (!IsAuthenticated)
                 {
@@ -32,11 +36,11 @@
                 }
                 else
                 {
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">peluqueria</a>
                     @if (IsAdmin)
                     {
                         <a class="py-2 d-none d-md-inline-block" asp-controller="Usuarios" asp-action="Index"><i class="fa-solid fa-user"></i> Usuarios</a>
                     }
-                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">peluqueria</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                             aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -44,19 +48,19 @@
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                <a class="nav-link text-ligth" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Servicios" asp-action="Index">Servicios</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Servicios" asp-action="IndexApi">Servicios</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Turnos" asp-action="Index">Turnos</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="EstilistaServicios" asp-action="VincularEstilista">Vincular</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="EstilistaServicios" asp-action="Index">Estilistas</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Usuarios" asp-action="Perfil">

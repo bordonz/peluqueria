@@ -1,0 +1,73 @@
+@{
+	ViewData["Title"] = "Crear Servicio";
+}
+
+<h4>Crear Servicio</h4>
+<hr />
+<div class="row">
+	<div class="col-md-4">
+		<form id="formAlta">
+			<div class="form-group">
+				<label for="Nombre" class="control-label">Nombre</label>
+				<input type="text" id="Nombre" name="Nombre" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Descripcion" class="control-label">Descripción</label>
+				<input type="text" id="Descripcion" name="Descripcion" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Duracion" class="control-label">Duracion</label>
+				<input type="text" id="Duracion" name="Duracion" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Precio" class="control-label">Precio</label>
+				<input type="number" id="Precio" name="Precio" class="form-control" />
+			</div>
+            <div class="form-group mb-3">
+                <label for="AvatarFile" class="control-label">Portada</label>
+                <input type="file" id="AvatarFile" name="AvatarFile" class="form-control" />
+            </div>
+			<div class="form-group">
+				<input type="submit" value="Guardar" class="btn btn-primary" />
+			</div>
+		</form>
+	</div>
+</div>
+<hr />
+<div>
+	<a asp-action="Index">Volver al listado</a>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('formAlta').addEventListener('submit', e => {
+            e.preventDefault();
+
+            const formData = new FormData();
+                formData.append('nombre', document.getElementById('Nombre').value);
+                formData.append('descripcion', document.getElementById('Descripcion').value);
+                formData.append('duracion', document.getElementById('Duracion').value);
+                formData.append('precio', document.getElementById('Precio').value);
+                formData.append('activo', true);
+
+            const inputFile = document.getElementById('AvatarFile');
+            if(inputFile.files.length > 0) {
+                formData.append('avatarFile', inputFile.files[0]);
+            }
+
+            fetch('/api/servicios', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+            })
+            .then(response => {
+                if(response.ok) {
+                    notyf.info("Servicio creado correctamente");
+                } else {
+                    notyf.error("Ocurrio un error al crear el servicio");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+}

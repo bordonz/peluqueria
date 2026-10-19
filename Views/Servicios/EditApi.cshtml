@@ -1,0 +1,98 @@
+@{
+	ViewData["Title"] = "Editar Servicio";
+}
+
+<h4>Editar Servicio</h4>
+<hr />
+<div class="row">
+	<div class="col-md-4">
+		<form id="formEditar">
+			<input type="hidden" id="IdServicio" name="idServicio" />
+			<div class="form-group">
+				<label for="Nombre" class="control-label">Nombre</label>
+				<input type="text" id="Nombre" name="Nombre" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Descripcion" class="control-label">Descripción</label>
+				<input type="text" id="Descripcion" name="Descripcion" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Duracion" class="control-label">Duracion</label>
+				<input type="text" id="Duracion" name="Duracion" class="form-control" />
+			</div>
+			<div class="form-group">
+				<label for="Precio" class="control-label">Precio</label>
+				<input type="number" id="Precio" name="Precio" class="form-control" />
+			</div>
+            <div class="form-group mb-3">
+                <label for="AvatarFile" class="control-label">Portada</label>
+                <input type="file" id="AvatarFile" name="AvatarFile" class="form-control" />
+            </div>
+			<div class="form-group">
+				<input type="submit" value="Guardar" class="btn btn-primary" />
+			</div>
+		</form>
+	</div>
+</div>
+<hr />
+<div>
+	<a asp-action="Index">Volver al listado</a>
+</div>
+
+@section Scripts {
+    <script>
+        const url = window.location.pathname;
+        const partes = url.split('/');
+        const idServicio = partes[partes.length - 1];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if(idServicio) {
+                fetch(`/api/servicios/${idServicio}`, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('IdServicio').value = data.idServicio;
+                    document.getElementById('Nombre').value = data.nombre;
+                    document.getElementById('Descripcion').value = data.descripcion;
+                    document.getElementById('Duracion').value = data.duracion;
+                    document.getElementById('Precio').value = data.precio;
+                    document.getElementById('AvatarFile').value = data.avatar;
+                })
+                .catch(error => console.error('Error al cargar el servicio a editar', error));
+            }
+        });
+
+        document.getElementById('formEditar').addEventListener('submit', e => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const id = document.getElementById('IdServicio').value;
+                formData.append('idServicio', id);
+                formData.append('nombre', document.getElementById('Nombre').value);
+                formData.append('descripcion', document.getElementById('Descripcion').value);
+                formData.append('duracion', document.getElementById('Duracion').value);
+                formData.append('precio', document.getElementById('Precio').value);
+
+            const inputFile = document.getElementById('AvatarFile');
+            if(inputFile.files.length > 0) {
+                formData.append('avatarFile', inputFile.files[0]);
+            }
+
+            fetch(`/api/servicios/${id}`, {
+                    method: 'PUT',
+                    body: formData,
+                    credentials: 'same-origin'
+            })
+            .then(response => {
+                if(response.ok) {
+                    notyf.info("Servicio editado correctamente");
+                } else {
+                    notyf.error("Ocurrio un error al editar el servicio");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+}
