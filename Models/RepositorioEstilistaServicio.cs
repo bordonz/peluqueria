@@ -215,5 +215,39 @@ namespace peluqueria.Models
             }
             return false;
         }
+
+        public List<EstilistaServicio> ObtenerEstilista(int idServicio)
+        {
+            List<EstilistaServicio> estilistas = new List<EstilistaServicio>();
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT e.*, p.nombre AS estilista_nombre, p.apellido AS estilista_apellido
+                    FROM Estilista_Servicios e
+                    INNER JOIN Usuarios p ON e.id_estilista = p.id_usuario
+                    WHERE e.id_servicio = @id";
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.Add("@id", MySqlDbType.Int32).Value = idServicio;
+                    connection.Open();
+                    var reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        EstilistaServicio e = new EstilistaServicio()
+                        {
+                            IdServicio = reader.GetInt32("id_servicio"),
+                            IdEstilista = reader.GetInt32("id_estilista"),
+                            Estilista = new Usuario()
+                            {
+                                Nombre = reader.GetString("estilista_nombre"),
+                                Apellido = reader.GetString("estilista_apellido")
+                            }
+                        };
+                        estilistas.Add(e);
+                    }
+                }
+                return estilistas;
+            }
+        }
     }
 }

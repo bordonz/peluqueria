@@ -108,5 +108,12 @@ namespace peluqueria.Controllers
                 return RedirectToAction(nameof(Delete));
             }
         }
+
+        [HttpGet]
+        public ActionResult ObtenerEstilistas(int idServicio)
+        {
+            var estilistas = repositorio.ObtenerEstilista(idServicio);
+                return Json(estilistas);
+        }
     }
 }

@@ -169,7 +169,7 @@ namespace peluqueria.Controllers
         {
             var servicios = repositorio.ObtenerTodos();
                 ViewBag.IdServicio = new SelectList(servicios, "IdServicio", "Nombre");
-                return View();
+                return Json(servicios);
         }
     }
 }

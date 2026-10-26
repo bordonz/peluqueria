@@ -228,5 +228,31 @@ namespace peluqueria.Models
 			}
 			return lista;
 		}
+
+        public int DevolverEstilistaServicio(int IdServicio, int IdEstilista)
+		{
+			int IdEstilistaServicios = -1;
+
+			using (MySqlConnection connection = new MySqlConnection(connectionString))
+			{
+				string sql = @"SELECT id_estilista_servicios
+							FROM estilista_servicios
+							WHERE id_servicio = @IdServicio AND id_estilista = @IdEstilista";
+
+				using (MySqlCommand command = new MySqlCommand(sql, connection))
+				{
+                    command.Parameters.AddWithValue("@IdServicio", IdServicio);
+                    command.Parameters.AddWithValue("@IdEstilista", IdEstilista);
+					connection.Open();
+					var resultado = command.ExecuteScalar();
+
+					if (resultado != null)
+                    {
+                        IdEstilistaServicios = Convert.ToInt32(resultado);
+                    }
+				}
+			}
+			return IdEstilistaServicios;
+		}
     }
 }
