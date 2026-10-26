@@ -18,9 +18,19 @@ html {
 }
 
 body {
-/*   margin-bottom: 60px; */
-/*   overflow: hidden; */
-/*   background-color: #f4f5f7; */
+  background-color: #dbdfdd;
+  color: #333333;
+}
+
+h1, h2, h3 {
+  color: #344E41;
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+  color: #344E41;
+  font-weight: 700;
 }
 
 .bg-custom {
@@ -48,4 +58,11 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+.btn-personalizado {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #344E41;
+  --bs-btn-hover-color:#fff;
+  --bs-btn-hover-bg: #198754;
 }

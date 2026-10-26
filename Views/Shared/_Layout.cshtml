@@ -11,7 +11,7 @@
     <style>
         .bg-custom {
             background-color: #344E41 !important;
-    }
+        }
 </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <!-- Select2 + Theme Bootstrap 4 -->
@@ -22,57 +22,60 @@
 <body onload="init()">
     @{
 		bool IsAuthenticated = User?.Identity?.IsAuthenticated ?? false;
-		@* Identity.Name ahora es el Id; para mostrar se usa el claim FullName *@
 		var NombreUsuario = User?.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? "";
 		var IsAdmin = User?.IsInRole("Administrador") ?? false;
 	}
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-custom border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-custom box-shadow mb-3">
             <div class="container-fluid">
                 @if (!IsAuthenticated)
                 {
-                    <a class="py-2" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i> Inicio</a>
-					<a href="@Url.Action("Login", "Usuarios")"><i class="fa-solid fa-right-to-bracket"></i> Acceder</a>
+                    <a class="text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i> Inicio</a>
+					<a class="text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" href="@Url.Action("Login", "Usuarios")"><i class="fa-solid fa-right-to-bracket"></i> Acceder</a>
                 }
                 else
                 {
-                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">peluqueria</a>
-                    @if (IsAdmin)
-                    {
-                        <a class="py-2 d-none d-md-inline-block" asp-controller="Usuarios" asp-action="Index"><i class="fa-solid fa-user"></i> Usuarios</a>
-                    }
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-ligth" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                <a class="nav-link text-decoration-none icon-link icon-link-hover" style="--bs-icon-link-transform: translate3d(0, -.125rem, 0); color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';"asp-area="" asp-controller="Home" asp-action="Index">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-house-door-fill" viewBox="0 0 16 16">
+                                        <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/>
+                                    </svg>
+                                    Home
+                                </a>
+                            </li>
+                            @if (IsAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-area="" asp-controller="EstilistaServicios" asp-action="VincularEstilista">Estilistas</a>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                                <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-area="" asp-controller="Servicios" asp-action="IndexApi">Servicios</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Servicios" asp-action="IndexApi">Servicios</a>
+                                <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-area="" asp-controller="Turnos" asp-action="Index">Turnos</a>
                             </li>
+                        </ul>
+                        <ul class="navbar-nav ms-auto">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Turnos" asp-action="Index">Turnos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="EstilistaServicios" asp-action="Index">Estilistas</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Usuarios" asp-action="Perfil">
+                                <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-controller="Usuarios" asp-action="Perfil">
                                     <i class="fa-solid fa-user"></i> @NombreUsuario
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Usuarios" asp-action="Logout">
+                                <a class="nav-link text-decoration-none" style="color: #ffffff;" onmouseover="this.style.color='#198754';" onmouseout="this.style.color='#ffffff';" asp-controller="Usuarios" asp-action="Logout">
                                     <i class="fa-solid fa-right-from-bracket"></i> Salir
                                 </a>
                             </li>
-                        </ul>
+                        <ul class="navbar-nav ms-auto">
                     </div>
                 }
             </div>
@@ -92,6 +95,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script type="text/javascript">
 		const notyf = new Notyf({
@@ -121,6 +126,7 @@
                 }
 			]
 		});
+        
 		function init() {
 			let error = "@(TempData["Error"] ?? ViewBag.Error ?? "")";
             let mensaje = "@(TempData["Mensaje"] ?? ViewBag.Mensaje ?? "")";

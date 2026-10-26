@@ -4,10 +4,7 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Usuario</h4>
-<hr />
+<h1>Registro</h1>
 <div class="row">
     <div class="col-md-4">
 		<form asp-action="Create" enctype="multipart/form-data">
@@ -33,8 +30,8 @@
 				<span asp-validation-for="Clave" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<label asp-for="AvatarFile" class="control-label"></label>
-				<input type="file" name="AvatarFile" />
+				<label asp-for="Avatar" class="control-label"></label>
+				<input type="file" name="AvatarFile" class="form-control" />
 				<span asp-validation-for="AvatarFile" class="text-danger"></span>
 			</div>
 			@if (User.IsInRole("Administrador"))
@@ -51,12 +48,8 @@
 				</div>	
 			}
 			<div class="form-group">
-				<input type="submit" value="Create" class="btn btn-primary" />
+				<input type="submit" value="Create" class="btn btn-personalizado" style="margin-top: 10px;" />
 			</div>
 		</form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
