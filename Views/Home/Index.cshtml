@@ -2,10 +2,24 @@
     ViewData["Title"] = "Home";
 }
 
+<style>
+    body {
+        overflow: hidden;
+        .imagen {
+        min-height: 85vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+    .text-center {
+        margin-top: 180px;
+    }
+    }
+</style>
 <div class="imagen">
     <div class="text-center">
         <h1 class="display-3 font-weight-bold text-white">Bienvenido a Navajas</h1>
         <p class="lead text-white">Reserva tu turno de forma rápida y sencilla</p>
-        <a asp-controller="Turnos" asp-action="Create" class="btn btn-primary btn-lg mt-3">Pedir Turno</a>
+        <a asp-controller="Turnos" asp-action="Create" class="btn btn-personalizado btn-lg mt-3">Pedir Turno</a>
     </div>
 </div>

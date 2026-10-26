@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -24,28 +25,33 @@ namespace peluqueria.Controllers
             this.logger = logger;
         }
 
-        //GET: Turnos/Index
-        public ActionResult Index(int pagina = 1)
+        // GET: Turnos
+        public IActionResult Index()
+        {
+            return View(); 
+        }
+
+        // GET: Turnos/Index
+        public ActionResult ObtenerTurnos(int pagina = 1, int tamPagina = 5)
         {
             try
             {
-                var tamaño = 5;
-                var lista = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño);
-                ViewBag.pagina = pagina;
-                var total = repositorio.ObtenerCantidad();
-                ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño +1;
-                ViewBag.id = TempData["id"];
+                bool usuario = User.IsInRole("Administrador");
+                int logueado = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                var lista = repositorio.ObtenerLista(usuario, logueado, Math.Max(pagina, 1), tamPagina);
+                var total = repositorio.ObtenerCantidad(usuario, logueado);
+                var totalPaginas = total % tamPagina == 0 ? total / tamPagina : (total / tamPagina) + 1;
 
-                if (TempData.ContainsKey("Mensaje"))
-                {
-                    ViewBag.Mensaje = TempData["Mensaje"];
-                }
-                return View(lista);
+                return Json(new {
+                    items = lista,
+                    totalPaginas = totalPaginas,
+                    paginaActual = pagina
+                });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error en index de Turnos");
-                throw;
+                return BadRequest(ex.Message);
             }
         }
 
@@ -64,7 +70,6 @@ namespace peluqueria.Controllers
 
         //POST: Turnos/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult Create(Turno t, string horaTurno)
         {
             if (string.IsNullOrWhiteSpace(horaTurno))
@@ -74,7 +79,6 @@ namespace peluqueria.Controllers
 
             if (TimeSpan.TryParse(horaTurno, out TimeSpan hora))
             {
-                // Combinar la fecha elegida con la hora recibida (ej: "14:30")
                 t.FechaTurno = t.FechaTurno.Date.Add(hora);
             }
 
@@ -85,20 +89,32 @@ namespace peluqueria.Controllers
                 return View(t);
             }
 
-
             try
             {
-                repositorio.Alta(t);
-                TempData["Id"] = t.IdTurno;
-                return RedirectToAction(nameof(Index));
+                t.IdCliente = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                t.IdEstilistaServicios = repoServicio.DevolverEstilistaServicio(t.EstilistaServicios.IdServicio, t.EstilistaServicios.IdEstilista);
+
+                if (t.IdEstilistaServicios == -1)
+                {
+                    return BadRequest("La combinación de estilista y servicio seleccionada no es válida.");
+                }
+
+                int resultado = repositorio.Alta(t);
+                if(resultado == -2)
+                {
+                    return BadRequest("El horario ya esta ocupado");
+                }
+                
+                if(resultado == -1)
+                {
+                    return BadRequest();
+                }
+                return Ok();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error en Create de Turnos");
-                var servicios = repoServicio.ObtenerTodos();
-                ViewBag.Servicio = new SelectList(servicios, "IdServicio", "Nombre");
-                ViewBag.Error = "Error al crear el Turno: " + ex.Message;
-                
+                var servicios = repoServicio.ObtenerTodos();    
                 return View(t);
             }
         }
@@ -114,77 +130,119 @@ namespace peluqueria.Controllers
                 return View(entidad);
         }
 
+        [HttpGet]
+        public JsonResult EditPorId(int id)
+        {
+            var entidad = repositorio.ObtenerPorId(id);
+            if (entidad == null)
+            {
+                return Json(new { success = false, message = "No encontrado" });
+            }
+            
+            return Json(entidad);
+        }
+        
         //POST: Turnos/Edit
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, Turno turno)
+        public ActionResult Edit(int id, Turno turno, [FromForm] int idServicio, [FromForm] string horaTurno)
         {
+            int IdDelEditor = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var t = repositorio.ObtenerPorId(id);
+
             try
             {
                 if (id != turno.IdTurno)
                 {
                     return NotFound();
                 }
-                
-                var t = repositorio.ObtenerPorId(id);
+
                 if (t == null)
                 {
                     return NotFound();
                 }
+                DateTime nuevaFechaTurno = turno.FechaTurno;
+                if (!string.IsNullOrEmpty(horaTurno) && TimeSpan.TryParse(horaTurno, out TimeSpan horaParsed))
+                {
+                    t.FechaTurno = turno.FechaTurno.Date.Add(horaParsed);
+                }
+                else
+                {
+                    t.FechaTurno = turno.FechaTurno;
+                }
+                
+                if (idServicio > 0)
+                {
+                    t.EstilistaServicios = new EstilistaServicio
+                    {
+                        Servicio = new Servicio { IdServicio = idServicio }
+                    };
+                }
 
+                if(User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                {
+                    repositorio.Modificacion(t);
+                    return Ok();
+                } else if (User.IsInRole("Cliente"))
+                {
+                    if(t.IdCliente != IdDelEditor)
+                    {
+                        return StatusCode(403);
+                    }
+
+                    if(nuevaFechaTurno <= DateTime.Now.AddDays(1))
+                    {
+                        return BadRequest();
+                    }
+                }
+
+                t.FechaTurno = nuevaFechaTurno;
                 repositorio.Modificacion(t);
-                TempData["Mensaje"] = "Edicion Exitosa";
-                return RedirectToAction(nameof(Index));
+                return Ok();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error en Edit de Turnos");
-                TempData["Error"] = "Error al editar el Turno";
-                return RedirectToAction(nameof(Edit));
+                return BadRequest(ex);
             }
-        }
-
-        //GET: Turnos/Delete
-        public ActionResult Delete(int id)
-        {
-            var entidad = repositorio.ObtenerPorId(id);
-            if (TempData.ContainsKey("Error"))
-            {
-                ViewBag.Mensaje = TempData["Error"];
-            }
-            return View(entidad);
         }
 
         //POST: Turnos/Delete
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, Turno turno)
+        public ActionResult Delete(int id)
         {
             try
             {
-                repositorio.Baja(id);
-                TempData["Mensaje"] = "Turno dado de baja";
-                return RedirectToAction(nameof(Index));
+                var turno = repositorio.ObtenerPorId(id);
+                if (turno == null)
+                {
+                    return NotFound();
+                }
+
+                if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                {
+                    repositorio.Baja(id);
+                    return Ok();
+                } else if (User.IsInRole("Cliente") && turno.FechaTurno > DateTime.Now.AddDays(1))
+                {
+                    repositorio.Baja(id);
+                    return Ok();
+                }
+                return BadRequest();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error en Delete de Turnos");
-                TempData["Error"] = "Error al dar de baja el turno";
-                return RedirectToAction(nameof(Delete));
+                return StatusCode(403, "No autorizado");
             }
         }
 
-        public JsonResult ObtenerHorariosDisponibles(DateTime fecha, int idServicio)
+        public JsonResult ObtenerHorariosDisponibles(DateTime fecha, int IdEstilista)
         {
             List<string> horariosPosibles = new List<string>
             {
                 "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"
             };
 
-            // 2. Trae las horas que ya están ocupadas para esa fecha y servicio desde la BD
-            List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(fecha, idServicio);
-
-            // 3. Filtra solo los horarios libres
+            List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(fecha, IdEstilista);
             var horariosDisponibles = horariosPosibles
                 .Where(h => !horasOcupadas.Contains(h))
                 .ToList();
@@ -202,7 +260,9 @@ namespace peluqueria.Controllers
                 var lista = repositorio.ObtenerTurnosDiarios(user, Math.Max(pagina, 1), tamaño);
                 ViewBag.pagina = pagina;
 
-                var total = repositorio.ObtenerCantidad();
+                bool usuario = User.IsInRole("Administrador");
+                int logueado = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                var total = repositorio.ObtenerCantidad(usuario, logueado);
                 ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño +1;
                 ViewBag.id = TempData["id"];
 
@@ -223,14 +283,13 @@ namespace peluqueria.Controllers
         public ActionResult TurnosSemanales(int contadorSemana)
         {
             try {
-                List<Turno> turnos = repositorio.ObtenerTunosSemanales(contadorSemana);
-                //TODO: Si la lista esta vacia mostrar con el notify un msj y redirigir al index
+                int logueado = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                List<Turno> turnos = repositorio.ObtenerTunosSemanales(contadorSemana, logueado);
                 return Json(turnos);
             }
             catch (Exception ex)
             {
-                // Si hay un error de SQL o NullReferenceException en Include()
-                return StatusCode(500, new { error = ex.Message });
+                return BadRequest(ex.Message);
             }
             }
     }

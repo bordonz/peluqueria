@@ -4,91 +4,214 @@
     ViewData["Title"] = "Crear Turno";
 }
 
-<h4>Nuevo Turno</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mb-3">
-                <label asp-for="FechaTurno" class="control-label">Fecha del Turno</label>
-                <input asp-for="FechaTurno" type="date" class="form-control" id="FechaTurno"
-                    min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
-                    max="@DateTime.Today.AddDays(29).ToString("yyyy-MM-dd")" />
-                <span asp-validation-for="FechaTurno" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="EstilistaServicios.Servicio.IdServicio" class="control-label">Servicio</label>
-                @Html.DropDownListFor(m => m.EstilistaServicios.Servicio.IdServicio,
-                         (SelectList)ViewBag.Servicio,
-                         "Seleccione un servicio",
-                         new { @class = "form-control select2-busqueda", id = "IdServicio" })
-                <span asp-validation-for="EstilistaServicios.Servicio.IdServicio" class="text-danger"></span>
-            </div>
-            <input type="hidden" id="HoraTurno" name="HoraTurno" />
-            <div class="form-group mb-3">
-                <label class="form-label font-weight-bold">Horarios Disponibles</label>
-                <div id="contenedor-horarios" class="d-flex flex-wrap gap-2 mt-2">
-                    <span class="text-muted">Seleccione fecha y servicio para ver horarios.</span>
+<div id="app" v-cloak>
+    <h4>Nuevo Turno</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form @@submit.prevent="guardarTurno">
+                <div class="text-danger" v-if="erroresForm.general">{{ erroresForm.general }}</div>
+                
+                <div class="form-group mb-3">
+                    <label for="FechaTurno" class="control-label">Fecha del Turno</label>
+                    <input type="date" class="form-control" id="FechaTurno"
+                           v-model="form.fechaTurno"
+                           @@change="cargarHorarios"
+                           min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                           max="@DateTime.Today.AddDays(29).ToString("yyyy-MM-dd")" />
+                    <span class="text-danger" v-if="erroresForm.fecha">{{ erroresForm.fecha }}</span>
                 </div>
-                <span id="error-hora" class="text-danger small"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Crear Turno" class="btn btn-primary" />
-            </div>
-        </form>
+
+                <div class="form-group mb-3">
+                    <label for="IdServicio" class="control-label">Servicio</label>
+                    <select id="IdServicio" class="form-control select2-busqueda" v-model="form.idServicio" @@change="cargarEstilistas">
+                        <option value="">Seleccione un servicio</option>
+                        <option v-for="serv in listaServicios" :value="serv.idServicio">
+                            {{ serv.nombre }}
+                        </option>
+                    </select>
+                    <span class="text-danger" v-if="erroresForm.servicio">{{ erroresForm.servicio }}</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Estilista</label>
+                    <select v-model="form.idEstilista" @@change="cargarHorarios" class="form-select" :disabled="!form.idServicio">
+                        <option value="" disabled>Seleccione un estilista...</option>
+                        <option v-for="e in estilistasDisponibles" :value="e.idEstilista" :key="e.idEstilista">
+                            {{ e.estilista.nombre }} {{ e.estilista.apellido }}
+                        </option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="HoraTurno" v-model="form.horaTurno" />
+
+                <div class="form-group mb-3">
+                    <label class="form-label font-weight-bold">Horarios Disponibles</label>
+                    <div id="contenedor-horarios" class="d-flex flex-wrap gap-2 mt-2">
+                        <span class="text-muted" v-if="!form.fechaTurno || !form.idServicio">Seleccione fecha y servicio para ver horarios.</span>
+                        <span class="text-muted" v-else-if="cargandoHorarios">Cargando horarios...</span>
+                        <span class="text-danger" v-else-if="horariosDisponibles.length === 0">No hay turnos libres para esta fecha.</span>
+                        
+                        <button v-else v-for="hora in horariosDisponibles" 
+                                :key="hora" 
+                                type="button" 
+                                class="btn m-1"
+                                :class="form.horaTurno === hora ? 'btn-primary text-white' : 'btn-outline-primary'"
+                                @@click="seleccionarHora(hora)">
+                            {{ hora }}
+                        </button>
+                    </div>
+                    <span id="error-hora" class="text-danger small" v-if="erroresForm.hora">{{ erroresForm.hora }}</span>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Crear Turno" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-<div>
-    <a asp-action="Index">Volver a la Lista</a>
+    <div>
+        <a href="/Turnos/Index">Volver a la Lista</a>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-        function cargarHorarios() {
-            var idServicio = $("#IdServicio").val();
-            var fecha = $("#FechaTurno").val();
+        const { createApp, ref, onMounted } = Vue;
 
-            if (idServicio && fecha) {
-                $.ajax({
-                    url: '@Url.Action("ObtenerHorariosDisponibles", "Turnos")',
-                    type: 'GET',
-                    data: { fecha: fecha, idServicio: idServicio },
-                    success: function (horarios) {
-                        var $contenedor = $("#contenedor-horarios");
-                        $contenedor.empty();
-
-                        if (!horarios || horarios.length === 0) {
-                            $contenedor.html('<div class="alert alert-warning p-2 w-100">No hay turnos libres para esta fecha.</div>');
-                        } else {
-                            $.each(horarios, function (i, hora) {
-                                var $btn = $('<button type="button" class="btn btn-outline-primary btn-hora m-1">' + hora + '</button>');
-
-                                $btn.on("click", function () {
-                                    $(".btn-hora").removeClass("btn-primary text-white").addClass("btn-outline-primary");
-                                    $(this).removeClass("btn-outline-primary").addClass("btn-primary text-white");
-
-                                    $("#HoraTurno").val(hora);
-                                    $("#error-hora").text("");
-                                });
-                                $contenedor.append($btn);
-                            });
-                        }
-                    },
-                    error: function () {
-                        $("#contenedor-horarios").html('<span class="text-danger">Ocurrió un error al cargar los horarios.</span>');
-                    }
+        createApp({
+            setup() {
+                const form = ref({
+                    fechaTurno: '',
+                    idServicio: '',
+                    idEstilista: '',
+                    horaTurno: ''
                 });
-            } else {
-                $("#contenedor-horarios").html('<span class="text-muted">Seleccione fecha y servicio para ver horarios.</span>');
-                $("#HoraTurno").val("");
-            }
-        }
 
-        $(document).ready(function () {
-            $("#IdServicio, #FechaTurno").on("change", function () {
-                cargarHorarios();
-            });
-        });
+                const listaServicios = ref([]);
+                const horariosDisponibles = ref([]);
+                const cargandoHorarios = ref(false);
+                const erroresForm = ref({});
+
+                const cargarServiciosSelect = async () => {
+                    try {
+                        const response = await fetch('/Servicios/ObtenerTodos', {
+                            method: 'GET',
+                            credentials: 'same-origin'
+                        });
+                        if (response.ok) {
+                            listaServicios.value = await response.json(); 
+                        }
+                    } catch (error) {
+                        console.error("Error al cargar los servicios:", error);
+                    }
+                };
+
+                const cargarHorarios = async () => {
+                    form.value.horaTurno = "";
+                    if (form.value.idServicio && form.value.fechaTurno && form.value.idEstilista) {
+                        cargandoHorarios.value = true;
+                        try {
+                            const response = await fetch(`/Turnos/ObtenerHorariosDisponibles?fecha=${form.value.fechaTurno}&idEstilista=${form.value.idEstilista}`, {
+                                method: 'GET',
+                                credentials: 'same-origin'
+                            });
+                            if (response.ok) {
+                                horariosDisponibles.value = await response.json();
+                            } else {
+                                horariosDisponibles.value = [];
+                            }
+                        } catch (error) {
+                            console.error("Error al cargar los horarios.", error);
+                            horariosDisponibles.value = [];
+                        } finally {
+                            cargandoHorarios.value = false;
+                        }
+                    } else {
+                        horariosDisponibles.value = [];
+                    }
+                };
+
+                const seleccionarHora = (hora) => {
+                    form.value.horaTurno = hora;
+                    erroresForm.value.hora = "";
+                };
+
+                const guardarTurno = async () => {
+                    if (!form.value.horaTurno) {
+                        erroresForm.value.hora = "Por favor seleccione un horario.";
+                        return;
+                    }
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('FechaTurno', form.value.fechaTurno);
+                        formData.append('EstilistaServicios.IdServicio', form.value.idServicio);
+                        formData.append('EstilistaServicios.idEstilista', form.value.idEstilista);
+                        formData.append('HoraTurno', form.value.horaTurno);
+
+                        const response = await fetch('/Turnos/Create', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin'
+                        });
+
+                        if (response.ok) {
+                            notyf.info("Turno creado correctamente");
+                        } else {
+                            notyf.error("Error al crear el turno, ya existe un registro");
+                        }
+                    } catch (error) {
+                        console.error("Error: ", error);
+                    }
+                };
+
+                const estilistasDisponibles = ref([]);
+                const cargarEstilistas = async () => {
+                    form.value.idEstilista = '';
+                    estilistasDisponibles.value = [];
+
+                    if (!form.value.idServicio) return;
+
+                    try {
+                        const response = await fetch(`/EstilistaServicios/ObtenerEstilistas?idServicio=${form.value.idServicio}`);
+                        if (response.ok) {
+                            estilistasDisponibles.value = await response.json();
+                        } else {
+                            notyf.error("No se pudieron cargar los estilistas");
+                        }
+                    } catch (error) {
+                        console.error("Error de red:", error);
+                    }
+                };
+
+                const onServicioChange = () => {
+                    cargarEstilistas();
+                    cargarHorarios();
+                };
+
+                onMounted(() => {
+                    cargarServiciosSelect();
+                });
+
+                return {
+                    form,
+                    listaServicios,
+                    horariosDisponibles,
+                    cargandoHorarios,
+                    erroresForm,
+                    estilistasDisponibles,
+                    cargarEstilistas,
+                    onServicioChange,
+                    cargarHorarios,
+                    seleccionarHora,
+                    guardarTurno
+                };
+            }
+        }).mount('#app');
     </script>
 }
+
+<style>
+    [v-cloak] { display: none; }
+</style>
