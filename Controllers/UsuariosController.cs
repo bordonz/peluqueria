@@ -453,7 +453,7 @@ namespace peluqueria.Controllers
 				return NotFound();
 			}
 
-			ViewData["Title"] = $"Cambiar contraseña de {usuario.Nombre} {usuario.Apellido}";
+			ViewData["Title"] = $"{usuario.Nombre} {usuario.Apellido}";
 			return View(usuario); // Pasamos la entidad Usuario directa
 		}
 

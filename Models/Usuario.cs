@@ -25,6 +25,7 @@ namespace peluqueria.Models
 		public int Rol { get; set; }
 		[NotMapped]//Para EF
 		public string RolNombre => Rol > 0 ? ((EnRoles)Rol).ToString() : "";
+		public bool Activo { get; set; } = true;
 
 		public static IDictionary<int, string> ObtenerRoles()
 		{

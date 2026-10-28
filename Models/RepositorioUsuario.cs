@@ -45,10 +45,11 @@ namespace peluqueria.Models
 			int res = -1;
 			using (MySqlConnection connection = new MySqlConnection(connectionString))
 			{
-				string sql = "DELETE FROM Usuarios WHERE id_usuario = @id";
+				string sql = "UPDATE usuarios SET activo=@activo WHERE id_usuario = @id";
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
 				{
 					command.CommandType = CommandType.Text;
+					command.Parameters.AddWithValue("@activo", false);
 					command.Parameters.AddWithValue("@id", id);
 					connection.Open();
 					res = command.ExecuteNonQuery();
@@ -57,6 +58,7 @@ namespace peluqueria.Models
 			}
 			return res;
 		}
+
 		public int Modificacion(Usuario e)
 		{
 			int res = -1;
@@ -93,6 +95,7 @@ namespace peluqueria.Models
 			{
 				string sql = @"SELECT id_usuario, nombre, apellido, avatar, email, clave, rol
 					FROM Usuarios
+					WHERE activo = 1
 					ORDER BY id_usuario
 					LIMIT @tamPagina OFFSET @offset";
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
