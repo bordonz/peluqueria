@@ -2,7 +2,6 @@
 
 <h1>@ViewData["Title"]</h1>
 <hr />
-
 <div class="row">
     <div class="col-md-4">
         <form asp-action="CambiarClave" method="post">
@@ -28,8 +27,8 @@
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Guardar Contraseña" class="btn btn-warning" />
-                <a asp-action="Edit" asp-route-id="@Model.IdUsuario" class="btn btn-secondary">Cancelar</a>
+                <input type="submit" value="Actualizar" class="btn btn-personalizado" />
+                <a asp-action="Edit" asp-route-id="@Model.IdUsuario" class="btn btn-danger">Cancelar</a>
             </div>
         </form>
     </div>
