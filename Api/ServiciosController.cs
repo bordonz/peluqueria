@@ -9,24 +9,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
+using peluqueria.Controllers;
 
 namespace peluqueria.Api
 {
     [ApiController]
 	[Route("api/Servicios")]
 	[Authorize(AuthenticationSchemes = "Cookies,JwtBearer")]
-	public class InmueblesController : Controller
+	public class ServiciosController : Controller
 	{
 		private readonly IRepositorioServicio repositorio;
 		private readonly IWebHostEnvironment environment;
 
-		public InmueblesController(IRepositorioServicio repositorio, IWebHostEnvironment environment)
+		public ServiciosController(IRepositorioServicio repositorio, IWebHostEnvironment environment)
 		{
 			this.repositorio = repositorio;
 			this.environment = environment;
 		}
 
 		// GET: api/Servicios
+		[AllowAnonymous]
 		[HttpGet]
 		public async Task<IActionResult> Get(int paginaNro = 1, int tamPagina = 10, Boolean activo = true)
 		{
@@ -178,53 +180,6 @@ namespace peluqueria.Api
 			}
 		}
 
-		// DELETE api/<controller>/5
-/* 		[HttpDelete("{id}")]
-		public async Task<IActionResult> Delete(int id)
-		{
-			try
-			{
-				var propietarioId = this.UsuarioId();
-				var entidad = contexto.Inmuebles.FirstOrDefault(e => e.Id == id && e.PropietarioId == propietarioId);
-				if (entidad != null)
-				{
-					contexto.Inmuebles.Remove(entidad);
-					contexto.SaveChanges();
-					return Ok();
-				}
-				return BadRequest();
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
-		}*/
-
-		/* // DELETE api/Servicios/5
-		[HttpDelete("BajaLogica/{id}")]
-		public async Task<IActionResult> BajaLogica(int id)
-		{
-			try
-			{
-				if(!User.IsInRole("Administrador"))
-				{
-					return Forbid();
-				}
-
-				var entidad = repositorio.ObtenerPorId(id);
-				if (entidad != null)
-				{
-					repositorio.Baja(id);
-					return Ok();
-				}
-				return BadRequest(ModelState);
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
-		} */
-
 		// DELETE api/Servicios/5
 		[HttpDelete("{id}/BajaAlta")]
 		public async Task<IActionResult> BajaAlta(int id)
@@ -244,30 +199,5 @@ namespace peluqueria.Api
 				return BadRequest(ex.Message);
 			}
 		}
-
-		/* // DELETE api/Servicios/5
-		[HttpDelete("AltaLogica/{id}")]
-		public async Task<IActionResult> AltaLogica(int id)
-		{
-			try
-			{
-				if(!User.IsInRole("Administrador"))
-				{
-					return Forbid();
-				}
-				
-				var entidad = repositorio.ObtenerPorId(id);
-				if (entidad != null)
-				{
-					repositorio.Activar(id);
-					return Ok();
-				}
-				return BadRequest(ModelState);
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
-		} */
 	}
 }
