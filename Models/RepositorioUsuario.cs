@@ -236,7 +236,9 @@ namespace peluqueria.Models
             {
                 string sql = @"SELECT u.*
                     FROM Usuarios u
-                    WHERE nombre LIKE @nombre OR apellido LIKE @nombre";
+                    WHERE u.activo = 1
+						AND u.rol = 2
+						AND (u.nombre LIKE @nombre OR u.apellido LIKE @nombre)";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
                     command.Parameters.Add("@nombre", MySqlDbType.VarChar).Value = nombre;;
