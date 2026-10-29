@@ -39,26 +39,47 @@ namespace peluqueria.Controllers
             }
         }
 
-        // GET: Usuarios
-		[Authorize(Policy = "Administrador")]
-		public ActionResult Index(int pagina = 1)
+        [Authorize(Policy = "Administrador")]
+		public IActionResult Index(int pagina = 1, bool usuariosEmpleados = true)
 		{
-            try
-            {               
-                var tamaño = 5;
-                var usuarios = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño);
-                ViewBag.Pagina = pagina;
-                var total = repositorio.ObtenerCantidad();
-                ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño + 1;
-                ViewBag.Id = TempData["Id"];
-                if (TempData.ContainsKey("Mensaje"))
-                    ViewBag.Mensaje = TempData["Mensaje"];
-                return View(usuarios);
-            } catch(Exception ex)
-            {
-                logger.LogError(ex, "Error en Index de Propietarios");
+			try
+			{
+				var tamaño = 5;
+				var usuarios = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño, usuariosEmpleados);
+				ViewBag.Pagina = pagina;
+				var total = repositorio.ObtenerCantidad(usuariosEmpleados);
+				ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño + 1;
+				ViewBag.UsuariosEmpleados = usuariosEmpleados;
+
+				ViewBag.Id = TempData["Id"];
+				if (TempData.ContainsKey("Mensaje"))
+					ViewBag.Mensaje = TempData["Mensaje"];
+
+				// Esto siempre devuelve la Vista HTML normal
+				return View(usuarios);
+			} 
+			catch(Exception ex)
+			{
+				logger.LogError(ex, "Error en Index de Usuarios");
 				throw;
-            }
+			}
+		}
+
+		[Authorize(Policy = "Administrador")]
+		[HttpGet]
+		public IActionResult Listar(int pagina = 1, bool usuariosEmpleados = true)
+		{
+			try
+			{
+				var tamaño = 5;
+				var usuarios = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño, usuariosEmpleados);
+				return Json(usuarios);
+			}
+			catch (Exception ex)
+			{
+				logger.LogError(ex, "Error al listar usuarios por JSON");
+				return BadRequest(ex.Message);
+			}
 		}
 
 		// GET: Usuarios/Create

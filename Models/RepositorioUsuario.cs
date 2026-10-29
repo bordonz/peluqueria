@@ -88,16 +88,25 @@ namespace peluqueria.Models
 			return res;
 		}
 
-		public List<Usuario> ObtenerLista(int paginaNro, int tamPagina)
+		public List<Usuario> ObtenerLista(int paginaNro, int tamPagina, bool usuariosEmpleados)
 		{
 			List<Usuario> res = new List<Usuario>();
 			using (MySqlConnection connection = new MySqlConnection(connectionString))
 			{
 				string sql = @"SELECT id_usuario, nombre, apellido, avatar, email, clave, rol
 					FROM Usuarios
-					WHERE activo = 1
-					ORDER BY id_usuario
-					LIMIT @tamPagina OFFSET @offset";
+					WHERE activo = 1";
+
+				if(!usuariosEmpleados)
+                {
+                    sql += " AND rol = 2";
+                } else
+				{
+					sql += " AND rol = 3";
+				}
+
+                sql += " ORDER BY id_usuario LIMIT @tamPagina OFFSET @offset";
+
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
 				{
 					command.CommandType = CommandType.Text;
@@ -125,13 +134,23 @@ namespace peluqueria.Models
 			return res;
 		}
 
-		public int ObtenerCantidad()
+		public int ObtenerCantidad(bool usuariosEmpleados)
 		{
 			int res = 0;
 			using (MySqlConnection connection = new MySqlConnection(connectionString))
 			{
 				string sql = @"SELECT COUNT(id_usuario)
-					FROM Usuarios";
+					FROM Usuarios
+					WHERE activo = 1";
+
+				if (!usuariosEmpleados)
+				{
+					sql += " AND rol = 2";
+				}
+				else
+				{
+					sql += " AND rol = 3";
+				}
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
 				{
 					command.CommandType = CommandType.Text;

@@ -12,6 +12,7 @@
 		</svg>
 	</a>
 </p>
+<a onclick="UsuariosEmpleados(1)" class="btn btn-personalizado" id="btnUsuarios">Ver empleados</a>
 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
     <div class="card-body p-0">
         <table class="table table-hover align-middle mb-0">
@@ -38,7 +39,7 @@
 					<th></th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody id="tablaUsuarios">
 			@foreach (var item in Model) {
 				<tr>
 					<td>
@@ -98,3 +99,62 @@
 		</svg>
 	</button>
 </div>
+
+@section Scripts{
+	<script>
+		let usuariosEmpleados = true;
+		function cambiarUsuarios() {
+			let btn = document.getElementById('btnUsuarios');
+			if(usuariosEmpleados) {
+				btn.textContent = "Ver empleados";
+			} else {
+				btn.textContent = "Ver clientes"
+			}
+		}
+
+
+		function UsuariosEmpleados(pagina) {
+			usuariosEmpleados= !usuariosEmpleados;
+			const tbody = document.querySelector("#tablaUsuarios");
+			tbody.innerHTML = '';
+            fetch(`/Usuarios/Listar?paginaNro=${pagina}&usuariosEmpleados=${usuariosEmpleados}`, {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if(response.status === 403) {
+                    notyf.error("No tienes permisos para ver los usuarios");
+                }
+
+                if(response.status === 400) {
+                    notyf.error("Error al intentar ver los usuarios");
+                }
+                return response.json();
+            })
+			.then(data => {
+				data.forEach(item => {
+					let avatarHtml = item.avatar 
+                        ? `<img width="32" src="${item.avatar}" />` 
+                        : `<img width="32" src="https://ui-avatars.com/api/?rounded=true&name=${item.nombre}+${item.apellido}" />`;
+					tbody.innerHTML += `
+						<tr>
+							<td>${item.idUsuario}</td>
+							<td>${item.nombre}</td>
+							<td>${item.apellido}</td>
+							<td>${item.email}</td>
+							<td>${avatarHtml}</td>
+							<td>${item.rolNombre}</td>
+							<td>
+                                <a href="/Usuarios/Edit/${item.idUsuario}" class="btn btn-personalizado" title="Editar">Editar</a>
+                                <a href="/Usuarios/Delete/${item.idUsuario}" class="btn btn-danger" title="Eliminar">Eliminar</a>
+                            </td>
+						</tr>
+					`;
+
+				});
+				cambiarUsuarios(pagina = 1);
+			})
+            .catch(error => console.error('Error al cargar usuarios: ', error));
+        }
+	</script>
+}
