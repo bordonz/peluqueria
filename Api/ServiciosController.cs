@@ -34,6 +34,11 @@ namespace peluqueria.Api
 		{
 			try
 			{
+				if(!activo && !User.IsInRole("Administrador"))
+				{
+					return Forbid();
+				}
+
                 var servicios = repositorio.ObtenerLista(paginaNro, tamPagina, activo);
 				return Ok(servicios);
 			}

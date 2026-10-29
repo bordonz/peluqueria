@@ -69,7 +69,16 @@
                 method: 'GET',
                 credentials: 'same-origin'
             })
-            .then(response => response.json())
+            .then(response => {
+                if(response.status === 403) {
+                    notyf.error("No tienes permisos para ver los servicios inactivos");
+                }
+
+                if(response.status === 400) {
+                    notyf.error("Error al intentar ver los servicios inactivos");
+                }
+                return response.json();
+            })
             .then(data => {
                 let contenedor = document.getElementById('contenedorServicios');
                 contenedor.innerHTML = '';
