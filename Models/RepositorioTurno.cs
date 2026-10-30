@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Google.Protobuf.WellKnownTypes;
 using MySql.Data.MySqlClient;
 
 namespace peluqueria.Models
@@ -45,15 +46,22 @@ namespace peluqueria.Models
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
+                int duracionServicio = ObtenerDuracionServicio(t.IdEstilistaServicios);
+                DateTime inicioTurno = t.FechaTurno;
+                DateTime finTurno = inicioTurno.AddHours(duracionServicio);
                 string sql = @"SELECT COUNT(1) 
-                    FROM Turnos t
-                    WHERE t.fecha_turno = @FechaTurno 
-                            AND t.id_estilista_servicios = @IdEstilistaServicio
-                            AND t.estado = 'Ocupado'";
+                                FROM Turnos t
+                                INNER JOIN estilista_servicios es ON t.id_estilista_servicios = es.id_estilista_servicios
+                                INNER JOIN servicios s ON es.id_servicio = s.id_servicio
+                                WHERE t.estado = 'Ocupado'
+                                    AND es.id_estilista = (SELECT id_estilista FROM estilista_servicios WHERE id_estilista_servicios = @IdEstilistaServicio)
+                                    AND @inicio < DATE_ADD(t.fecha_turno, INTERVAL s.duracion HOUR)
+                                    AND @finTurno > t.fecha_turno";
 
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
-                    command.Parameters.AddWithValue("@FechaTurno", t.FechaTurno);
+                    command.Parameters.AddWithValue("@inicio", inicioTurno);
+                    command.Parameters.AddWithValue("@finTurno", finTurno);
                     command.Parameters.AddWithValue("@IdEstilistaServicio", t.IdEstilistaServicios);
                     connection.Open();
                     var result = command.ExecuteScalar();
@@ -63,6 +71,24 @@ namespace peluqueria.Models
             }
         }
 
+        public int ObtenerDuracionServicio(int IdEstilistaServ)
+        {
+            int duracion = 0;
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT s.duracion
+                                FROM estilista_servicios es
+                                INNER JOIN servicios s ON es.id_servicio = s.id_servicio
+                                WHERE es.id_estilista_servicios = @id";
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@id", IdEstilistaServ);
+                    connection.Open();
+                    duracion = Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
+            return duracion;
+        }
         public int Baja(int id)
         {
             int res = -1;
@@ -296,18 +322,23 @@ namespace peluqueria.Models
         public List<string> ObtenerHorasOcupadas(DateTime fecha, int IdEstilista)
         {
             List<string> horasOcupadas = new List<string>();
+            DateTime inicio = fecha.Date;
+            DateTime fin = inicio.AddDays(1);
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"SELECT t.fecha_turno
-                            FROM Turnos t
-                            INNER JOIN estilista_servicios es ON t.id_estilista_servicios = es.id_estilista_servicios
-                            WHERE DATE(t.fecha_turno) = DATE(@fecha)
+                string sql = @"SELECT t.fecha_turno, s.duracion
+                                FROM Turnos t
+                                INNER JOIN estilista_servicios es ON t.id_estilista_servicios = es.id_estilista_servicios
+                                INNER JOIN servicios s ON es.id_servicio = s.id_servicio
+                                WHERE t.fecha_turno >= @inicio
+                                AND t.fecha_turno < @fin
                                 AND es.id_estilista = @IdEstilista
                                 AND t.estado != 'Cancelada'";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
-                    command.Parameters.AddWithValue("@fecha", fecha.ToString("yyyy-MM-dd"));
+                    command.Parameters.AddWithValue("@inicio", inicio);
+                    command.Parameters.AddWithValue("@fin", fin);
                     command.Parameters.AddWithValue("@IdEstilista", IdEstilista);
 
                     connection.Open();
@@ -316,8 +347,18 @@ namespace peluqueria.Models
                         while (reader.Read())
                         {
                             DateTime fechaTurno = reader.GetDateTime("fecha_turno");
-                            string horaFormateada = fechaTurno.ToString("HH:mm");
-                            horasOcupadas.Add(horaFormateada);
+                            int duracion = reader.GetInt32("duracion");
+
+                            for(int i = 0; i < duracion; i++)
+                            {
+                                DateTime lasHorasOcupadas = fechaTurno.AddHours(i);
+                                string horaFormateada = lasHorasOcupadas.ToString("HH:mm");
+
+                                if (!horasOcupadas.Contains(horaFormateada))
+                                {
+                                    horasOcupadas.Add(horaFormateada);
+                                }
+                            }
                         }
                     }
                 }

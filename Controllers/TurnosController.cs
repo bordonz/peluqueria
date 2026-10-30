@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -235,7 +236,7 @@ namespace peluqueria.Controllers
             }
         }
 
-        public JsonResult ObtenerHorariosDisponibles(DateTime fecha, int IdEstilista)
+        public JsonResult ObtenerHorariosDisponibles(DateTime fecha, int IdEstilista, int idServicio)
         {
             List<string> horariosPosibles = new List<string>
             {
@@ -243,9 +244,29 @@ namespace peluqueria.Controllers
             };
 
             List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(fecha, IdEstilista);
-            var horariosDisponibles = horariosPosibles
-                .Where(h => !horasOcupadas.Contains(h))
-                .ToList();
+            int duracion = repositorio.ObtenerDuracionServicio(idServicio);
+            List<string> horariosDisponibles = new List<string>();
+
+            foreach (var hora in horariosPosibles)
+            {
+                bool espacioSuficiente = true;
+
+                for(int i = 0; i < duracion; i++)
+                {
+                    TimeSpan horaActual = TimeSpan.Parse(hora).Add(TimeSpan.FromHours(i));
+                    string horaString = horaActual.ToString(@"hh\:mm");
+                        if (!horariosPosibles.Contains(horaString) || horasOcupadas.Contains(horaString))
+                    {
+                        espacioSuficiente = false;
+                        break;
+                    }
+                }
+
+                if (espacioSuficiente)
+                {
+                    horariosDisponibles.Add(hora);
+                }
+            }
 
             return Json(horariosDisponibles);
         }

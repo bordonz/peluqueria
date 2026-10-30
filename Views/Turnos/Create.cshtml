@@ -112,7 +112,7 @@
                     if (form.value.idServicio && form.value.fechaTurno && form.value.idEstilista) {
                         cargandoHorarios.value = true;
                         try {
-                            const response = await fetch(`/Turnos/ObtenerHorariosDisponibles?fecha=${form.value.fechaTurno}&idEstilista=${form.value.idEstilista}`, {
+                            const response = await fetch(`/Turnos/ObtenerHorariosDisponibles?fecha=${form.value.fechaTurno}&idEstilista=${form.value.idEstilista}&idServicio=${form.value.idServicio}`, {
                                 method: 'GET',
                                 credentials: 'same-origin'
                             });

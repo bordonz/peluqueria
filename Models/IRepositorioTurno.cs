@@ -8,5 +8,6 @@ namespace peluqueria.Models
         List<string> ObtenerHorasOcupadas(DateTime fecha, int idServicio);
         List<Turno> ObtenerTurnosDiarios(int user, int paginaNro, int tamPagina);
         public List<Turno> ObtenerTunosSemanales(int sumaSemana, int empleado);
+        int ObtenerDuracionServicio(int IdEstilistaServ);
     }
 }
