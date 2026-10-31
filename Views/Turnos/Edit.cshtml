@@ -58,7 +58,7 @@
                                 :key="hora" 
                                 type="button" 
                                 class="btn m-1"
-                                :class="form.horaTurno === hora ? 'btn-primary text-white' : 'btn-outline-primary'"
+                                :class="form.horaTurno === hora ? 'btn-primary text-white' : 'btn-outline-success'"
                                 @@click="seleccionarHora(hora)">
                             {{ hora }}
                         </button>
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="submit" value="Guardar Cambios" class="btn btn-primary" />
+                    <input type="submit" value="Guardar Cambios" class="btn btn-personalizado" />
                 </div>
             </form>
         </div>
