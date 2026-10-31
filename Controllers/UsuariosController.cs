@@ -72,6 +72,13 @@ namespace peluqueria.Controllers
 			try
 			{
 				var tamaño = 5;
+				int totalRegistros = repositorio.ObtenerCantidad(usuariosEmpleados);
+				
+				if (totalRegistros == 0)
+				{
+					return Json(new List<Usuario>());
+				}
+
 				var usuarios = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño, usuariosEmpleados);
 				return Json(usuarios);
 			}
@@ -254,20 +261,28 @@ namespace peluqueria.Controllers
                 }
 
                 repositorio.Modificacion(usuarioE);
-				var claims = new List<Claim>
+				if(this.UsuarioId() == usuarioE.IdUsuario)
 				{
-					new Claim(ClaimTypes.NameIdentifier, usuarioE.IdUsuario.ToString()),
-					new Claim(ClaimTypes.Name, usuarioE.Email),
-					new Claim("FullName", usuarioE.Nombre + " " + usuarioE.Apellido),
-					new Claim(ClaimTypes.Role, usuarioE.Rol.ToString())
-				};
+					var claims = new List<Claim>
+					{
+						new Claim(ClaimTypes.NameIdentifier, usuarioE.IdUsuario.ToString()),
+						new Claim(ClaimTypes.Name, usuarioE.Email),
+						new Claim("FullName", usuarioE.Nombre + " " + usuarioE.Apellido),
+						new Claim(ClaimTypes.Role, usuarioE.Rol.ToString())
+					};
+					var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+					await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+				}
 
-				var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-				await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-                ViewBag.Mensaje = "Datos guardados correctamente.";
-				ViewBag.Roles = Usuario.ObtenerRoles();
-				
-				return View("Edit", usuarioE);
+                TempData["Mensaje"] = "Datos guardados correctamente.";
+
+				if(User.IsInRole("Administrador") && vista == nameof(Edit))
+				{
+					return RedirectToAction(nameof(Edit), new { id = usuarioE.IdUsuario });
+				} else
+				{
+					return RedirectToAction("Perfil");
+				}
 			}
 			catch (Exception ex)
 			{

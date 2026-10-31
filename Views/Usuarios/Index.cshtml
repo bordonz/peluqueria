@@ -12,7 +12,7 @@
 		</svg>
 	</a>
 </p>
-<a onclick="UsuariosEmpleados(1)" class="btn btn-personalizado" id="btnUsuarios">Ver empleados</a>
+<a onclick="filtrarUsuarios()" class="btn btn-personalizado" id="btnUsuarios">Ver empleados</a>
 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
     <div class="card-body p-0">
         <table class="table table-hover align-middle mb-0">
@@ -88,73 +88,93 @@
 	</div>
 </div>
 <div style="margin-top: 10px;">
-	<button type="button" data-controller="Usuarios" data-action="Index" class="btn btn-personalizado" style="margin-right: 10px; data-pagina="@ViewBag.pagina" onclick="cambiarPagina('atras', this)">
-		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-			<path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-		</svg>
-	</button>
-	<button type="button" data-controller="Usuarios" data-action="Index" class="btn btn-personalizado" data-pagina="@ViewBag.pagina" onclick="cambiarPagina('adelante', this)">
-		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-			<path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
-		</svg>
-	</button>
+    <button type="button" class="btn btn-personalizado" style="margin-right: 10px;" onclick="cambiarPagina('atras')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+    </button>
+    <button type="button" class="btn btn-personalizado" onclick="cambiarPagina('adelante')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+        </svg>
+    </button>
 </div>
 
 @section Scripts{
 	<script>
-		let usuariosEmpleados = true;
-		function cambiarUsuarios() {
-			let btn = document.getElementById('btnUsuarios');
-			if(usuariosEmpleados) {
-				btn.textContent = "Ver empleados";
-			} else {
-				btn.textContent = "Ver clientes"
-			}
-		}
+		let paginaActual = 1;
+        let usuariosEmpleados = true;
+        
+        function filtrarUsuarios() {
+            usuariosEmpleados = !usuariosEmpleados;
+            let btn = document.getElementById('btnUsuarios');
+            if(usuariosEmpleados) {
+                btn.textContent = "Ver empleados";
+            } else {
+                btn.textContent = "Ver clientes";
+            }
+            paginaActual = 1; // Volvemos a la página 1 al cambiar de filtro
+            cargarPagina(paginaActual);
+        }
 
-
-		function UsuariosEmpleados(pagina) {
-			usuariosEmpleados= !usuariosEmpleados;
-			const tbody = document.querySelector("#tablaUsuarios");
-			tbody.innerHTML = '';
-            fetch(`/Usuarios/Listar?paginaNro=${pagina}&usuariosEmpleados=${usuariosEmpleados}`, {
+        // Función centralizada para traer los datos por AJAX
+        function cargarPagina(pagina) {
+            const tbody = document.querySelector("#tablaUsuarios");
+            
+            fetch(`/Usuarios/Listar?pagina=${pagina}&usuariosEmpleados=${usuariosEmpleados}`, {
                 method: 'GET',
                 credentials: 'same-origin'
             })
             .then(response => {
-                if(response.status === 403) {
-                    notyf.error("No tienes permisos para ver los usuarios");
-                }
-
-                if(response.status === 400) {
-                    notyf.error("Error al intentar ver los usuarios");
-                }
+                if(response.status === 403) notyf.error("No tienes permisos para ver los usuarios");
+                if(response.status === 400) notyf.error("Error al intentar ver los usuarios");
                 return response.json();
             })
-			.then(data => {
-				data.forEach(item => {
-					let avatarHtml = item.avatar 
+            .then(data => {
+                if (data.length === 0) {
+                    notyf.error("No hay más registros para mostrar.");
+                    return; 
+                }
+
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    let avatarHtml = item.avatar 
                         ? `<img width="32" src="${item.avatar}" />` 
                         : `<img width="32" src="https://ui-avatars.com/api/?rounded=true&name=${item.nombre}+${item.apellido}" />`;
-					tbody.innerHTML += `
-						<tr>
-							<td>${item.idUsuario}</td>
-							<td>${item.nombre}</td>
-							<td>${item.apellido}</td>
-							<td>${item.email}</td>
-							<td>${avatarHtml}</td>
-							<td>${item.rolNombre}</td>
-							<td>
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.idUsuario}</td>
+                            <td>${item.nombre}</td>
+                            <td>${item.apellido}</td>
+                            <td>${item.email}</td>
+                            <td>${avatarHtml}</td>
+                            <td>${item.rolNombre}</td>
+                            <td>
                                 <a href="/Usuarios/Edit/${item.idUsuario}" class="btn btn-personalizado" title="Editar">Editar</a>
                                 <a href="/Usuarios/Delete/${item.idUsuario}" class="btn btn-danger" title="Eliminar">Eliminar</a>
                             </td>
-						</tr>
-					`;
-
-				});
-				cambiarUsuarios(pagina = 1);
-			})
+                        </tr>
+                    `;
+                });
+            })
             .catch(error => console.error('Error al cargar usuarios: ', error));
+        }
+
+        // Controla los botones de las flechas (paginación)
+        function cambiarPagina(direccion) {
+            let nuevaPagina = paginaActual;
+
+            if (direccion === 'adelante') {
+                nuevaPagina++;
+            } else if (direccion === 'atras' && paginaActual > 1) {
+                nuevaPagina--;
+            } else {
+                return; 
+            }
+
+            paginaActual = nuevaPagina;
+            cargarPagina(paginaActual); // 👈 AQUÍ SE FALTABA LLAMAR A LA FUNCIÓN
         }
 	</script>
 }

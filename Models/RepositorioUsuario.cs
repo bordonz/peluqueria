@@ -99,7 +99,7 @@ namespace peluqueria.Models
 
 				if(!usuariosEmpleados)
                 {
-                    sql += " AND rol = 2";
+                    sql += " AND rol IN (1, 2)";
                 } else
 				{
 					sql += " AND rol = 3";
@@ -145,7 +145,7 @@ namespace peluqueria.Models
 
 				if (!usuariosEmpleados)
 				{
-					sql += " AND rol = 2";
+					sql += " AND rol IN (1, 2)";
 				}
 				else
 				{
