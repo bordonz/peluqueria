@@ -73,6 +73,15 @@ namespace peluqueria.Api
 				{
 					return Forbid();
 				}
+
+				if (string.IsNullOrWhiteSpace(entidad.Nombre) ||
+					string.IsNullOrWhiteSpace(entidad.Descripcion) ||
+					string.IsNullOrWhiteSpace(entidad.Duracion) ||
+					entidad.Precio <= 0 ||
+           		 	entidad.AvatarFile == null || entidad.AvatarFile.Length == 0)
+				{
+					return BadRequest("Todos los campos son obligatorios y el precio debe ser mayor a 0.");
+				}
 				
 				//Al avatar/portada lo controlamos mediante el ModelState
 				if (ModelState.IsValid)
