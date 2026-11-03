@@ -146,8 +146,9 @@
                     try {
                         const formData = new FormData();
                         formData.append('FechaTurno', form.value.fechaTurno);
+                        formData.append('idServicio', form.value.idServicio);
                         formData.append('EstilistaServicios.IdServicio', form.value.idServicio);
-                        formData.append('EstilistaServicios.idEstilista', form.value.idEstilista);
+                        formData.append('idEstilista', form.value.idEstilista);
                         formData.append('HoraTurno', form.value.horaTurno);
 
                         const response = await fetch('/Turnos/Create', {
@@ -159,7 +160,8 @@
                         if (response.ok) {
                             notyf.info("Turno creado correctamente");
                         } else {
-                            notyf.error("Error al crear el turno, ya existe un registro");
+                            const mensajeError = await response.text();
+                            notyf.error(mensajeError || "Error al crear el turno");
                         }
                     } catch (error) {
                         console.error("Error: ", error);

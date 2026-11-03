@@ -57,6 +57,7 @@ namespace peluqueria.Controllers
         }
 
         //GET: Turnos/Create
+        
         public ActionResult Create()
         {
             if (TempData.ContainsKey("Error"))
@@ -71,16 +72,17 @@ namespace peluqueria.Controllers
 
         //POST: Turnos/Create
         [HttpPost]
-        public ActionResult Create(Turno t, string horaTurno)
+        public ActionResult Create(Turno t, string horaTurno, [FromForm] int idServicio, [FromForm] int idEstilista)
         {
             if (string.IsNullOrWhiteSpace(horaTurno))
             {
                 ModelState.AddModelError("", "Debe seleccionar un horario para el turno.");
             }
 
-            if (TimeSpan.TryParse(horaTurno, out TimeSpan hora))
+            TimeSpan horaParsed = default;
+            if (TimeSpan.TryParse(horaTurno, out horaParsed))
             {
-                t.FechaTurno = t.FechaTurno.Date.Add(hora);
+                t.FechaTurno = t.FechaTurno.Date.Add(horaParsed);
             }
 
             if (!ModelState.IsValid)
@@ -93,11 +95,44 @@ namespace peluqueria.Controllers
             try
             {
                 t.IdCliente = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                t.IdEstilistaServicios = repoServicio.DevolverEstilistaServicio(t.EstilistaServicios.IdServicio, t.EstilistaServicios.IdEstilista);
+                
+                // Usamos los IDs recibidos por parámetro con total seguridad
+                int servicioIdAUsar = idServicio;
+                int estilistaIdAUsar = idEstilista;
+
+                t.IdEstilistaServicios = repoServicio.DevolverEstilistaServicio(servicioIdAUsar, estilistaIdAUsar);
 
                 if (t.IdEstilistaServicios == -1)
                 {
                     return BadRequest("La combinación de estilista y servicio seleccionada no es válida.");
+                }
+
+                int duracion = repositorio.ObtenerDuracionServicio(t.IdEstilistaServicios);
+                
+                List<string> horariosPosibles = new List<string>
+                {
+                    "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"
+                };
+
+                // Ahora obtendrá las horas ocupadas del estilista correcto
+                List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(t.FechaTurno.Date, estilistaIdAUsar);
+
+                bool espacioSuficiente = true;
+                for (int i = 0; i < duracion; i++)
+                {
+                    TimeSpan horaActual = horaParsed.Add(TimeSpan.FromHours(i));
+                    string horaString = horaActual.ToString(@"hh\:mm");
+
+                    if (!horariosPosibles.Contains(horaString) || horasOcupadas.Contains(horaString))
+                    {
+                        espacioSuficiente = false;
+                        break;
+                    }
+                }
+
+                if (!espacioSuficiente)
+                {
+                    return BadRequest("La duración del servicio supera el horario de cierre");
                 }
 
                 int resultado = repositorio.Alta(t);
@@ -152,51 +187,79 @@ namespace peluqueria.Controllers
 
             try
             {
-                if (id != turno.IdTurno)
+                if (id != turno.IdTurno || t == null)
                 {
                     return NotFound();
                 }
 
-                if (t == null)
-                {
-                    return NotFound();
-                }
                 DateTime nuevaFechaTurno = turno.FechaTurno;
-                if (!string.IsNullOrEmpty(horaTurno) && TimeSpan.TryParse(horaTurno, out TimeSpan horaParsed))
+                TimeSpan horaParsed;
+                if (!string.IsNullOrEmpty(horaTurno) && TimeSpan.TryParse(horaTurno, out horaParsed))
                 {
-                    t.FechaTurno = turno.FechaTurno.Date.Add(horaParsed);
+                    nuevaFechaTurno = turno.FechaTurno.Date.Add(horaParsed);
                 }
                 else
                 {
-                    t.FechaTurno = turno.FechaTurno;
-                }
-                
-                if (idServicio > 0)
-                {
-                    t.EstilistaServicios = new EstilistaServicio
-                    {
-                        Servicio = new Servicio { IdServicio = idServicio }
-                    };
+                    horaParsed = turno.FechaTurno.TimeOfDay;
                 }
 
-                if(User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                string horaStringInput = horaParsed.ToString(@"hh\:mm");
+
+                int servicioAValidar = idServicio > 0 ? idServicio : t.EstilistaServicios.IdServicio;
+                int duracion = repositorio.ObtenerDuracionServicio(servicioAValidar);
+                
+                List<string> horariosPosibles = new List<string>
                 {
-                    repositorio.Modificacion(t);
-                    return Ok();
-                } else if (User.IsInRole("Cliente"))
+                    "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"
+                };
+
+                List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(nuevaFechaTurno.Date, t.EstilistaServicios.IdEstilista);
+
+                string horaActualDelTurno = t.FechaTurno.ToString(@"hh\:mm");
+                horasOcupadas.Remove(horaActualDelTurno);
+
+                bool espacioSuficiente = true;
+                for (int i = 0; i < duracion; i++)
                 {
-                    if(t.IdCliente != IdDelEditor)
+                    TimeSpan horaActual = horaParsed.Add(TimeSpan.FromHours(i));
+                    string horaString = horaActual.ToString(@"hh\:mm");
+
+                    if (!horariosPosibles.Contains(horaString) || horasOcupadas.Contains(horaString))
+                    {
+                        espacioSuficiente = false;
+                        break;
+                    }
+                }
+
+                if (!espacioSuficiente)
+                {
+                    return BadRequest("El horario seleccionado no está disponible o la duración del servicio supera el horario de cierre/bloques permitidos.");
+                }
+
+                if (User.IsInRole("Cliente"))
+                {
+                    if (t.IdCliente != IdDelEditor)
                     {
                         return StatusCode(403);
                     }
 
-                    if(nuevaFechaTurno <= DateTime.Now.AddDays(1))
+                    if (nuevaFechaTurno <= DateTime.Now.AddDays(1))
                     {
-                        return BadRequest();
+                        return BadRequest("El turno debe modificarse con al menos un día de anticipación.");
                     }
                 }
-
+                
                 t.FechaTurno = nuevaFechaTurno;
+                if (idServicio > 0)
+                {
+                    t.EstilistaServicios = new EstilistaServicio
+                    {
+                        IdServicio = idServicio,
+                        IdEstilista = t.EstilistaServicios.IdEstilista
+                    };
+                }
+
+                
                 repositorio.Modificacion(t);
                 return Ok();
             }
