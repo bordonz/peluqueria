@@ -31,16 +31,15 @@ namespace peluqueria.Models
             return res;
         }
 
-        public int Baja(int id)
+        public int Baja(int idEstilistaServicio)
         {
             int res = -1;
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                string sql = @"DELETE FROM Estilista_Servicios
-                    WHERE id_estilista_servicios = @id";
+                string sql = "UPDATE estilista_servicios SET activo = 0 WHERE id_estilista_servicios = @id";
                 using (MySqlCommand command = new MySqlCommand(sql, connection))
                 {
-                    command.Parameters.AddWithValue("@id", id);
+                    command.Parameters.AddWithValue("@id", idEstilistaServicio);
                     connection.Open();
                     res = command.ExecuteNonQuery();
                 }

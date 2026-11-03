@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using peluqueria.Services;
 
 namespace peluqueria.Controllers
 {
+	[Authorize]
     public class UsuariosController : Controller
     {
         private readonly ILogger<UsuariosController> logger;
@@ -25,6 +27,7 @@ namespace peluqueria.Controllers
 		}
 
         //GET: Usuarios/Buscar/5
+		[Authorize(Policy = "Administrador")]
         [Route("Usuarios/Buscar/{q}", Name = "Buscar")]
         public IActionResult Buscar(string q)
         {
@@ -39,7 +42,7 @@ namespace peluqueria.Controllers
             }
         }
 
-        [Authorize(Policy = "Administrador")]
+		[Authorize(Policy = "Administrador")]
 		public IActionResult Index(int pagina = 1, bool usuariosEmpleados = true)
 		{
 			try
@@ -65,8 +68,8 @@ namespace peluqueria.Controllers
 			}
 		}
 
-		[Authorize(Policy = "Administrador")]
 		[HttpGet]
+		[Authorize(Policy = "Administrador")]
 		public IActionResult Listar(int pagina = 1, bool usuariosEmpleados = true)
 		{
 			try
@@ -156,7 +159,6 @@ namespace peluqueria.Controllers
 		}
 
 		// GET: Usuarios/Edit/5
-		[Authorize]
 		public ActionResult Perfil()
 		{
 			if (TempData.ContainsKey("Error"))
@@ -173,9 +175,14 @@ namespace peluqueria.Controllers
 		}
 
 		// GET: Usuarios/Edit/5
-		[Authorize(Policy = "Administrador")]
 		public ActionResult Edit(int id)
 		{
+			if (!User.IsInRole("Administrador") && this.UsuarioId() != id)
+			{
+				TempData["Error"] = "No tienes autorización";
+				return RedirectToAction(nameof(Index), "Home"); // O return Forbid();
+			}
+
 			if (TempData.ContainsKey("Error"))
 			{
 				ViewBag.Mensaje = TempData["Error"];
@@ -193,10 +200,9 @@ namespace peluqueria.Controllers
 		// POST: Usuarios/Edit/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		[Authorize]
 		public async Task<ActionResult> Edit(int id, Usuario u)
 		{
-			var vista = nameof(Edit);//de que vista provengo
+			var vista = nameof(Edit);
 			try
 			{
 				if (!User.IsInRole("Administrador"))
@@ -294,7 +300,6 @@ namespace peluqueria.Controllers
 		}
 
 		// GET: Usuarios/Delete/5
-		[Authorize(Policy = "Administrador")]
 		public ActionResult Delete(int id)
 		{
 			var entidad = repositorio.ObtenerPorId(id);
@@ -308,7 +313,6 @@ namespace peluqueria.Controllers
 		// POST: Usuarios/Delete/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		[Authorize(Policy = "Administrador")]
 		public ActionResult Delete(int id, Usuario usuario)
 		{
 			try
@@ -326,7 +330,6 @@ namespace peluqueria.Controllers
 			}
 		}
 
-		[Authorize]
 		public IActionResult Avatar()
 		{
 			var u = repositorio.ObtenerPorId(this.UsuarioId());
@@ -343,7 +346,6 @@ namespace peluqueria.Controllers
 			return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
 		}
 
-		[Authorize]
 		public string AvatarBase64()
 		{
 			var u = repositorio.ObtenerPorId(this.UsuarioId());
@@ -360,7 +362,6 @@ namespace peluqueria.Controllers
 			return Convert.ToBase64String(fileBytes);
 		}
 
-		[Authorize]
 		[HttpPost("[controller]/[action]/{fileName}")]
 		public IActionResult FromBase64([FromBody] string imagen, [FromRoute] string fileName)
 		{
@@ -375,7 +376,6 @@ namespace peluqueria.Controllers
 			return Ok();
 		}
 
-		[Authorize]
 		public ActionResult Foto()
 		{
 			try
@@ -407,8 +407,8 @@ namespace peluqueria.Controllers
 
 		// POST: Usuarios/Login/
 		[HttpPost]
-		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
+		[AllowAnonymous]
 		public async Task<IActionResult> Login(LoginView login)
 		{
 			try
@@ -468,16 +468,13 @@ namespace peluqueria.Controllers
 		[Route("salir", Name = "logout")]
 		public async Task<ActionResult> Logout()
 		{
-			await HttpContext.SignOutAsync(
-					CookieAuthenticationDefaults.AuthenticationScheme);
+			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 			return RedirectToAction("Index", "Home");
 		}
 
 		// GET: Usuarios/CambiarClave/5
-		[Authorize]
 		public ActionResult CambiarClave(int id)
 		{
-			// Validar permisos: Si no es Admin y tampoco es su propio ID, no se permite.
 			if (!User.IsInRole("Administrador") && this.UsuarioId() != id)
 			{
 				return RedirectToAction(nameof(Index), "Home");
@@ -496,7 +493,6 @@ namespace peluqueria.Controllers
 		// POST: Usuarios/CambiarClave/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		[Authorize]
 		public ActionResult CambiarClave(int id, string? claveAntigua, string claveNueva, string confirmarClave)
 		{
 			bool esAdmin = User.IsInRole("Administrador");
@@ -569,6 +565,53 @@ namespace peluqueria.Controllers
 				return RedirectToAction(nameof(Edit), new { id = id });
 			}
 			return RedirectToAction(nameof(Perfil));
+		}
+
+		[HttpPost("api/token/autenticar")]
+		[AllowAnonymous]
+		public IActionResult AutenticarApi([FromBody] LoginView login)
+		{
+			try
+			{
+				string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+					password: login.Clave,
+					salt: System.Text.Encoding.ASCII.GetBytes(configuration["Salt"] ?? ""),
+					prf: KeyDerivationPrf.HMACSHA1,
+					iterationCount: 1000,
+					numBytesRequested: 256 / 8));
+
+				var usuario = repositorio.ObtenerPorEmail(login.Usuario);
+				if (usuario == null || usuario.Clave != hashed)
+				{
+					return Unauthorized("Credenciales inválidas");
+				}
+
+				var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+				var key = Encoding.UTF8.GetBytes(configuration["TokenAuthentication:SecretKey"] ?? "");
+				
+				var tokenDescriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
+				{
+					Subject = new System.Security.Claims.ClaimsIdentity(new[]
+					{
+						new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+						new System.Security.Claims.Claim(ClaimTypes.Name, usuario.Email),
+						new System.Security.Claims.Claim(ClaimTypes.Role, usuario.RolNombre ?? "Administrador")
+					}),
+					Expires = DateTime.UtcNow.AddHours(3),
+					Issuer = configuration["TokenAuthentication:Issuer"],
+					Audience = configuration["TokenAuthentication:Audience"],
+					SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
+						new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key), 
+						Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
+				};
+				
+				var token = tokenHandler.CreateToken(tokenDescriptor);
+				return Ok(new { token = tokenHandler.WriteToken(token) });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
 		}
     }
 }

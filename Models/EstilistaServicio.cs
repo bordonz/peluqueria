@@ -8,5 +8,6 @@ namespace peluqueria.Models
 
         public int IdServicio { get; set; }
         public Servicio? Servicio { get; set; }
+        public bool Activo { get; set; } = true;
     }
 }

@@ -131,14 +131,15 @@
                 return response.json();
             })
             .then(data => {
-                if (data.length === 0) {
+                if (data.length === 0 && pagina > 1) {
+                    paginaActual--;
                     notyf.error("No hay más registros para mostrar.");
                     return; 
                 }
 
                 tbody.innerHTML = '';
                 data.forEach(item => {
-                    let avatarHtml = item.avatar 
+                    let avatarHtml = item.avatar
                         ? `<img width="32" src="${item.avatar}" />` 
                         : `<img width="32" src="https://ui-avatars.com/api/?rounded=true&name=${item.nombre}+${item.apellido}" />`;
                     
