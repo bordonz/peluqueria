@@ -7,5 +7,6 @@ namespace peluqueria.Models
         Servicio? ObtenerPorId(int id);
         List<Servicio> ObtenerTodos();
         int DevolverEstilistaServicio(int IdServicio, int IdEstilista);
+        List<Servicio> ObtenerTodosPorEstilista(int idEstilista);
     }
 }

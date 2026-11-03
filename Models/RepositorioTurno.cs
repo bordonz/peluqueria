@@ -89,6 +89,7 @@ namespace peluqueria.Models
             }
             return duracion;
         }
+        
         public int Baja(int id)
         {
             int res = -1;

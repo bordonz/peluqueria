@@ -208,6 +208,7 @@ namespace peluqueria.Models
 			{
 				string sql = @"SELECT s.id_servicio, s.nombre
 							FROM Servicios s
+                            WHERE activo = 1
 							ORDER BY s.id_servicio ASC";
 
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
@@ -227,6 +228,37 @@ namespace peluqueria.Models
 				}
 			}
 			return lista;
+		}
+
+        public List<Servicio> ObtenerTodosPorEstilista(int idEstilista)
+		{
+			var lista = new List<Servicio>();
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string sql = @"SELECT s.id_servicio, s.nombre, s.duracion
+                            FROM Servicios s
+                            INNER JOIN estilista_servicios es ON s.id_servicio = es.id_servicio
+                            WHERE es.id_estilista = @idEstilista AND es.activo = 1
+                            ORDER BY s.id_servicio ASC";
+
+                using (MySqlCommand command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@idEstilista", idEstilista);
+                    connection.Open();
+                    var reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        Servicio s = new Servicio
+                        {
+                            IdServicio = reader.GetInt32("id_servicio"),
+                            Nombre = reader.GetString("nombre")
+                        };
+                        lista.Add(s);
+                    }
+                }
+            }
+            return lista;
 		}
 
         public int DevolverEstilistaServicio(int IdServicio, int IdEstilista)
