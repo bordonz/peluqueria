@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using peluqueria.Models;
 
 namespace peluqueria.Controllers
 {
+    [Authorize(Policy = "Administrador")]
     public class EstilistaServiciosController : Controller
     {
         private readonly IRepositorioEstilistaServicio repositorio;
@@ -48,8 +50,21 @@ namespace peluqueria.Controllers
         public IActionResult VincularEstilista()
         {
             var servicios = repositorioServicio.ObtenerTodos();
-                ViewBag.IdServicio = new SelectList(servicios, "IdServicio", "Nombre");
-                return View();
+            ViewBag.IdServicio = new SelectList(servicios, "IdServicio", "Nombre");
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult DeleteVinculo()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerServiciosPorEstilista(int idEstilista)
+        {
+            var servicios = repositorioServicio.ObtenerTodosPorEstilista(idEstilista); 
+            return Json(servicios);
         }
 
         [Route("EstilistaServicios/BuscarEstilista/{q}")]
@@ -82,24 +97,29 @@ namespace peluqueria.Controllers
             }
         }
 
-        //GET: EstilistaServicios/Delete
+ /*        //GET: EstilistaServicios/Delete
         public ActionResult Delete(int id)
         {
             var entidad = repositorio.ObtenerPorId(id);
             return View(entidad);
-        }
+        } */
 
         //POST: EstilistaServicios/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, EstilistaServicio e)
+        public ActionResult Delete(int idEstilista, int idServicio)
         {
             try
             {
-                //TODO: Validar que nos devuelva un id valido
-                repositorio.Baja(id);
-                TempData["Mensaje"] = "Vinculo de estilista servicio dado de baja";
-                return RedirectToAction(nameof(Index));
+                int idEstilistaServicios = repositorioServicio.DevolverEstilistaServicio(idServicio, idEstilista);
+
+                if (idEstilistaServicios != -1)
+                {
+                    repositorio.Baja(idEstilistaServicios);
+                }
+
+                TempData["Mensaje"] = "Vinculo dado de baja";
+                return RedirectToAction("DeleteVinculo");
             }
             catch (Exception ex)
             {
