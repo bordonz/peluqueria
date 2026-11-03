@@ -5,6 +5,7 @@ using peluqueria.Models;
 
 namespace peluqueria.Controllers
 {
+    [Authorize(Policy = "Administrador")]
     public class ServiciosController : Controller
     {
         private readonly IRepositorioServicio repositorio;
@@ -18,6 +19,7 @@ namespace peluqueria.Controllers
             this.logger = logger;
         }
 
+        [AllowAnonymous]
         public ActionResult IndexApi(int pagina = 1)
         {
             return View();
@@ -37,31 +39,6 @@ namespace peluqueria.Controllers
         {
             return View();
         }
-
-        //GET: Servicios/Index
-        /* public ActionResult Index(int pagina = 1)
-        {
-            try
-            {
-                var tamaño = 5;
-                var lista = repositorio.ObtenerLista(Math.Max(pagina, 1), tamaño);
-                ViewBag.pagina = pagina;
-                var total = repositorio.ObtenerCantidad();
-                ViewBag.TotalPaginas = total % tamaño == 0 ? total / tamaño : total / tamaño +1;
-                ViewBag.id = TempData["id"];
-
-                if (TempData.ContainsKey("Mensaje"))
-                {
-                    ViewBag.Mensaje = TempData["Mensaje"];
-                }
-                return View(lista);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error en index de Servicios");
-                throw;
-            }
-        } */
 
         //GET: Servicios/Create
         public ActionResult Create()

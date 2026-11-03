@@ -80,6 +80,11 @@
                 return response.json();
             })
             .then(data => {
+                if(data.length === 0 && pagina > 1) {
+                    paginaActual--;
+                    return;
+                }
+
                 let contenedor = document.getElementById('contenedorServicios');
                 contenedor.innerHTML = '';
 
@@ -112,7 +117,7 @@
                                     <p class="card-text text-muted mb-2">${item.descripcion}</p>
                                     
                                     <ul class="list-group list-group-flush mb-3">
-                                        <li class="list-group-item px-0"><strong>Duración:</strong> ${item.duracion}</li>
+                                        <li class="list-group-item px-0"><strong>Duración/Horas:</strong> ${item.duracion}</li>
                                         <li class="list-group-item px-0"><strong>Precio:</strong> $${item.precio}</li>
                                         <li class="list-group-item px-0"><strong>Activo:</strong> ${item.activo ? 'Sí' : 'No'}</li>
                                     </ul>
