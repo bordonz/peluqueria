@@ -16,7 +16,7 @@ namespace peluqueria.Api
     [ApiController]
 	[Route("api/Servicios")]
 	[Authorize(AuthenticationSchemes = "Cookies,JwtBearer")]
-	public class ServiciosController : Controller
+	public class ServiciosController : ControllerBase
 	{
 		private readonly IRepositorioServicio repositorio;
 		private readonly IWebHostEnvironment environment;

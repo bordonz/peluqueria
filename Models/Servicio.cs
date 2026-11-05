@@ -11,7 +11,7 @@ namespace peluqueria.Models
         public decimal Precio { get; set; }
         public bool Activo { get; set; } = true;
         public string? Avatar { get; set; }
-		[NotMapped]
-		public IFormFile? AvatarFile { get; set; }
+        [NotMapped]
+        public IFormFile? AvatarFile { get; set; }
     }
 }

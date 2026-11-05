@@ -96,7 +96,6 @@ namespace peluqueria.Controllers
             {
                 t.IdCliente = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
                 
-                // Usamos los IDs recibidos por parámetro con total seguridad
                 int servicioIdAUsar = idServicio;
                 int estilistaIdAUsar = idEstilista;
 
@@ -114,7 +113,6 @@ namespace peluqueria.Controllers
                     "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"
                 };
 
-                // Ahora obtendrá las horas ocupadas del estilista correcto
                 List<string> horasOcupadas = repositorio.ObtenerHorasOcupadas(t.FechaTurno.Date, estilistaIdAUsar);
 
                 bool espacioSuficiente = true;
