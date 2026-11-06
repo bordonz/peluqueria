@@ -160,6 +160,7 @@
                             const servicioId = data.estilistaServicios?.servicio?.idServicio || data.estilistaServicios?.idServicio;
                             form.value.idServicio = servicioId;
                             const estilistaId = data.estilistaServicios?.estilista?.idEstilista || data.estilistaServicios?.idEstilista;
+                            form.value.idEstilista = estilistaId;
                             form.value.horaTurno = data.horaTurno || (data.fechaTurno ? data.fechaTurno.split('T')[1]?.substring(0, 5) : '');
 
                             if (servicioId) {

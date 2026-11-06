@@ -48,6 +48,7 @@ namespace peluqueria.Api
 			}
 		}
 
+		[Authorize(Policy = "Administrador")]
 		// GET api/Servicios/5
 		[HttpGet("{id}")]
 		public async Task<IActionResult> Get(int id)
@@ -63,7 +64,9 @@ namespace peluqueria.Api
 			}
 		}
 
+
 		// POST api/Servicios
+		[Authorize(Policy = "Administrador")]
 		[HttpPost]
 		public async Task<IActionResult> Post([FromForm] Servicio entidad)
 		{
@@ -123,6 +126,7 @@ namespace peluqueria.Api
 
 		// PUT api/Servicios/5
 		[HttpPut("{id}")]
+		[Authorize(Policy = "Administrador")]
 		public async Task<IActionResult> Put(int id, [FromForm] Servicio entidad)
 		{
 			try
@@ -196,6 +200,7 @@ namespace peluqueria.Api
 
 		// DELETE api/Servicios/5
 		[HttpDelete("{id}/BajaAlta")]
+		[Authorize(Policy = "Administrador")]
 		public async Task<IActionResult> BajaAlta(int id)
 		{
 			try

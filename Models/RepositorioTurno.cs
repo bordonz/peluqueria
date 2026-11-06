@@ -113,7 +113,7 @@ namespace peluqueria.Models
         public int Modificacion(Turno t)
         {
             int res = -1;
-            int IdEstilistaServ = DevolverEstilistaServicio(t.EstilistaServicios.Servicio.IdServicio);
+            int IdEstilistaServ = DevolverEstilistaServicio(t.EstilistaServicios.IdServicio, t.EstilistaServicios.IdEstilista);
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string sql = @"UPDATE Turnos
@@ -133,7 +133,7 @@ namespace peluqueria.Models
             return res;
         }
 
-        public int DevolverEstilistaServicio(int IdServicio)
+        public int DevolverEstilistaServicio(int IdServicio, int idEstilista)
 		{
 			int IdEstilistaServicios = 0;
 
@@ -141,11 +141,12 @@ namespace peluqueria.Models
 			{
 				string sql = @"SELECT id_estilista_servicios
 							FROM estilista_servicios
-							WHERE id_servicio = @id LIMIT 1";
+							WHERE id_servicio = @id AND id_estilista = @idE LIMIT 1";
 
 				using (MySqlCommand command = new MySqlCommand(sql, connection))
 				{
                     command.Parameters.AddWithValue("@id", IdServicio);
+                    command.Parameters.AddWithValue("@idE", idEstilista);
 					connection.Open();
 					var resultado = command.ExecuteScalar();
 

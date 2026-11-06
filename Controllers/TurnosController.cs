@@ -253,7 +253,7 @@ namespace peluqueria.Controllers
                     t.EstilistaServicios = new EstilistaServicio
                     {
                         IdServicio = idServicio,
-                        IdEstilista = t.EstilistaServicios.IdEstilista
+                        IdEstilista = turno.EstilistaServicios.IdEstilista
                     };
                 }
 
